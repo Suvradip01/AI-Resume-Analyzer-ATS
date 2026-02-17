@@ -1,0 +1,10 @@
+fastapi
+uvicorn
+spacy
+sentence-transformers
+pdfplumber
+python-docx
+
+pydantic
+python-multipart
+torch --index-url https://download.pytorch.org/whl/cpu
