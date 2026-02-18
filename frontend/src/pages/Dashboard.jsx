@@ -1,9 +1,13 @@
 import { UserButton, useUser } from "@clerk/clerk-react";
 import { useState } from "react";
-import { Upload, FileText, CheckCircle, AlertCircle, Sparkles, ChevronRight, X, ChevronLeft } from "lucide-react";
+import { Upload, FileText, CheckCircle, AlertCircle, Sparkles, ChevronRight, X, ChevronLeft, Info, AlertTriangle, CheckCircle2 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import ResultPieChart from "../components/ResultPieChart";
 import ResultRadarChart from "../components/ResultRadarChart";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "../components/ui/card";
+import { Badge } from "../components/ui/badge";
+import { Alert, AlertTitle, AlertDescription } from "../components/ui/alert";
+import { Progress } from "../components/ui/progress";
 
 export default function Dashboard() {
     const { user } = useUser();
@@ -68,6 +72,92 @@ export default function Dashboard() {
             setLoading(false);
         }
     };
+
+    // Utility function to clean feedback text from emojis and special characters
+    // Utility function to clean feedback text from emojis and special characters
+    const cleanFeedbackText = (text) => {
+        if (!text) return "";
+        let cleaned = text;
+
+        // 1. Globally remove unicode replacement characters and common artifacts
+        cleaned = cleaned.replace(/[\ufffd\uFFFD\u203D◆♦️]/g, '');
+
+        // 2. Handle specific "Project Complexity" format to preserve the Level
+        // Backend pattern: "**{Name} ({Level})**: ..." -> We want "{Level}. ..."
+        const levelMatch = cleaned.match(/\((Basic|Medium|Advanced)\s*Level\)/i);
+        if (levelMatch) {
+            // Replace everything up to the colon with just the Level
+            cleaned = cleaned.replace(/^.*?(\((Basic|Medium|Advanced)\s*Level\)).*?:\s*/i, '$1. ');
+        } else {
+            // 3. Remove standard labels (Skills, Overall, Tip for X, etc.)
+            // Matches: Optional symbols/bold -> Label -> Optional bold -> Colon
+            const labelPattern = /^[\s\W]*(\*\*)?(Skills|Experience Relevance|Experience|Project Detected|Project|Overall|Tip for [^:]+|Final Verdict)(\*\*)?:\s*/i;
+            cleaned = cleaned.replace(labelPattern, '');
+        }
+
+        // 4. Remove any remaining leading non-alphanumeric characters (emojis, symbols)
+        // Keep: Letters, Numbers, Quotes, Brackets, Markdown (*, _, `)
+        cleaned = cleaned.replace(/^[^a-zA-Z0-9*("'`\[\]]+/g, '');
+
+        // 5. Convert markdown bold to HTML strong
+        cleaned = cleaned.replace(/\*\*(.*?)\*\*/g, '<strong class="text-white">$1</strong>');
+
+        return cleaned.trim();
+    };
+
+    // Helper to parse feedback string into structured object for UI
+    const parseFeedback = (feedbackItem) => {
+        // 1. Skills
+        if (feedbackItem.includes("✅ **Skills**")) {
+            return { type: "skills", status: "success", title: "Skills Match", subtitle: "All mandatory skills detected", badge: "Strong", icon: CheckCircle2 };
+        }
+        if (feedbackItem.includes("❌ **Critical Missing Skills**")) {
+            return { type: "skills", status: "warning", title: "Skills Match", subtitle: "Missing critical skills", badge: "Action Needed", icon: AlertTriangle };
+        }
+
+        // 2. Projects
+        // Distinguish between Status (Basic/Medium) vs Tips
+        if (feedbackItem.includes("Basic Level") || feedbackItem.includes("Medium Level")) {
+            return { type: "project", status: "info", title: "Project Complexity", subtitle: "Current Level", badge: "Improve", icon: Info };
+        }
+        if (feedbackItem.includes("Tip for Project")) {
+            return { type: "project", subtype: "tip", status: "info", title: "Project Recommendations", subtitle: "Enhancement Tips", badge: "Improve", icon: Info };
+        }
+        if (feedbackItem.includes("Advanced Level")) {
+            return { type: "project", status: "success", title: "Project Portfolio", subtitle: "Strong Projects", badge: "Strong", icon: CheckCircle2 };
+        }
+
+        // 3. Experience
+        if (feedbackItem.includes("Experience Relevance")) {
+            return { type: "experience", status: "warning", title: "Experience Relevance", subtitle: "Attention Required", badge: "Attention", icon: AlertTriangle };
+        }
+
+        // 4. Overall (Handling the confusion)
+        if (feedbackItem.includes("Overall")) {
+            return { type: "overall", status: "default", title: "Final Verdict", icon: Sparkles };
+        }
+
+        return { type: "general", status: "info", title: "Insight", icon: Info };
+    };
+
+    // Categorize feedback for the new UI layout
+    const getCategorizedFeedback = () => {
+        if (!result || !result.feedback) return { skills: [], projects: [], experience: [], other: [] };
+
+        const categories = { skills: [], projects: [], experience: [], other: [] };
+
+        result.feedback.forEach(item => {
+            const parsed = parseFeedback(item);
+            const data = { ...parsed, original: item };
+
+            if (parsed.type === "skills") categories.skills.push(data);
+            else if (parsed.type === "project") categories.projects.push(data);
+            else if (parsed.type === "experience") categories.experience.push(data);
+            else categories.other.push(data);
+        });
+        return categories;
+    };
+
 
     return (
         <div className="min-h-screen bg-background text-foreground font-sans selection:bg-primary/30 overflow-x-hidden">
@@ -161,7 +251,7 @@ export default function Dashboard() {
                                     onChange={handleFileChange}
                                     className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-20"
                                 />
-                                <div className={`
+                                <div className={` 
                                     border border-dashed rounded-2xl h-40 transition-all duration-300 flex flex-col items-center justify-center gap-3
                                     ${file
                                         ? 'border-white/40 bg-white/5'
@@ -217,7 +307,7 @@ export default function Dashboard() {
                     </div>
                 </motion.div>
 
-                {/* Floating Action Button - Positioned Centered overlapping the grid or below */}
+                {/* Floating Action Button */}
                 <motion.div
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
@@ -243,7 +333,7 @@ export default function Dashboard() {
                     <button
                         onClick={handleAnalyze}
                         disabled={loading}
-                        className={`
+                        className={` 
                             relative group w-full h-14 rounded-full font-bold text-base shadow-[0_0_40px_-10px_rgba(255,255,255,0.3)] flex items-center justify-center gap-2 overflow-hidden transition-all duration-300
                             ${loading
                                 ? 'bg-neutral-900 text-neutral-500 cursor-not-allowed border border-white/5'
@@ -254,7 +344,7 @@ export default function Dashboard() {
                         {loading ? (
                             <>
                                 <div className="size-4 border-2 border-neutral-400 border-t-transparent rounded-full animate-spin" />
-                                <span>Processing...</span>
+                                <span className="animate-pulse">Analyzing Resume...</span>
                             </>
                         ) : (
                             <>
@@ -265,38 +355,6 @@ export default function Dashboard() {
                     </button>
                 </motion.div>
 
-                {/* Value Props (Only show if no result yet) */}
-                {!result && !loading && (
-                    <motion.div
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        transition={{ delay: 0.5 }}
-                        className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-16 w-full opacity-60 hover:opacity-100 transition duration-500"
-                    >
-                        <div className="text-center p-4">
-                            <div className="bg-white/5 w-12 h-12 rounded-xl flex items-center justify-center mx-auto mb-4 border border-white/10">
-                                <FileText className="text-primary size-6" />
-                            </div>
-                            <h3 className="text-white font-semibold mb-1">ATS Friendly</h3>
-                            <p className="text-sm text-slate-400">Checks if your resume parses correctly.</p>
-                        </div>
-                        <div className="text-center p-4">
-                            <div className="bg-white/5 w-12 h-12 rounded-xl flex items-center justify-center mx-auto mb-4 border border-white/10">
-                                <Sparkles className="text-accent size-6" />
-                            </div>
-                            <h3 className="text-white font-semibold mb-1">Keyword Match</h3>
-                            <p className="text-sm text-slate-400">Finds missing keywords from the job description.</p>
-                        </div>
-                        <div className="text-center p-4">
-                            <div className="bg-white/5 w-12 h-12 rounded-xl flex items-center justify-center mx-auto mb-4 border border-white/10">
-                                <CheckCircle className="text-emerald-400 size-6" />
-                            </div>
-                            <h3 className="text-white font-semibold mb-1">Score & Tips</h3>
-                            <p className="text-sm text-slate-400">Get a 0-100 score and actionable feedback.</p>
-                        </div>
-                    </motion.div>
-                )}
-
                 {/* Results Section */}
                 <AnimatePresence>
                     {result && (
@@ -304,24 +362,19 @@ export default function Dashboard() {
                             id="results-section"
                             initial={{ opacity: 0, y: 40 }}
                             animate={{ opacity: 1, y: 0 }}
-                            className="w-full mt-10 space-y-8 pb-20"
+                            className="w-full mt-12 space-y-12 pb-20"
                         >
-                            <div className="flex items-center justify-center gap-4 py-8">
-                                <div className="h-px bg-white/10 flex-1" />
-                                <span className="text-primary font-semibold tracking-wider uppercase text-sm">Analysis Results</span>
-                                <div className="h-px bg-white/10 flex-1" />
-                            </div>
 
                             {/* Charts Section */}
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                                 {/* Overall Score - Pie Chart */}
-                                <div className="bg-secondary/40 backdrop-blur-md border border-white/10 rounded-3xl p-8 flex flex-col items-center justify-center relative overflow-hidden">
+                                <div className="bg-neutral-900/40 backdrop-blur-md border border-white/10 rounded-3xl p-8 flex flex-col items-center justify-center relative overflow-hidden">
                                     <h2 className="text-sm font-bold text-slate-400 uppercase tracking-widest mb-6">Overall Match Score</h2>
                                     <ResultPieChart score={result.score} />
                                 </div>
 
                                 {/* XAI Analysis - Radar Chart */}
-                                <div className="bg-secondary/40 backdrop-blur-md border border-white/10 rounded-3xl p-8 flex flex-col items-center justify-center relative overflow-hidden">
+                                <div className="bg-neutral-900/40 backdrop-blur-md border border-white/10 rounded-3xl p-8 flex flex-col items-center justify-center relative overflow-hidden">
                                     <h2 className="text-sm font-bold text-slate-400 uppercase tracking-widest mb-6">XAI Match Breakdown</h2>
                                     <ResultRadarChart data={[
                                         { subject: 'Skills', A: result.skill_score, fullMark: 100 },
@@ -332,44 +385,139 @@ export default function Dashboard() {
                                 </div>
                             </div>
 
-                            {/* Missing Skills */}
-                            {result.missing_skills && result.missing_skills.length > 0 && (
-                                <div className="bg-white/5 border border-white/10 rounded-3xl p-8">
-                                    <h3 className="flex items-center gap-3 font-bold text-red-300 mb-6 text-lg">
-                                        <AlertCircle className="size-5" />
-                                        <span>Missing Keywords</span>
-                                    </h3>
-                                    <div className="flex flex-wrap gap-3">
-                                        {result.missing_skills.map((skill, i) => (
-                                            <span key={i} className="px-4 py-2 bg-red-500/10 border border-red-500/20 text-red-200 text-sm font-medium rounded-xl">
-                                                {skill}
-                                            </span>
-                                        ))}
-                                    </div>
-                                    <p className="mt-4 text-sm text-slate-400">
-                                        tip: enhancing your resume with these keywords can significantly improve your ATS score.
-                                    </p>
+                            {/* Detailed Insights Section */}
+                            <div className="space-y-6">
+                                <div className="flex flex-col gap-1">
+                                    <h2 className="text-3xl font-semibold text-white">Detailed Insights</h2>
+                                    <p className="text-sm text-neutral-400">Actionable improvements to increase your match score</p>
                                 </div>
-                            )}
 
-                            {/* Detailed Feedback */}
-                            <div className="space-y-4">
-                                <h3 className="font-bold text-white text-xl pl-2">Detailed Insights</h3>
-                                {result.feedback.map((item, idx) => (
-                                    <div
-                                        key={idx}
-                                        className="bg-secondary/50 border border-white/5 rounded-2xl p-6 text-slate-300 text-base leading-relaxed"
-                                    >
-                                        <div dangerouslySetInnerHTML={{
-                                            __html: item
-                                                .replace(/\*\*(.*?)\*\*/g, '<strong class="text-primary-mid font-semibold">$1</strong>')
-                                                .replace(/❌/g, '<span class="inline-flex size-6 items-center justify-center bg-red-500/20 rounded-full text-xs mr-3 align-middle">✕</span>')
-                                                .replace(/✅/g, '<span class="inline-flex size-6 items-center justify-center bg-green-500/20 rounded-full text-xs mr-3 align-middle">✓</span>')
-                                                .replace(/⚠️/g, '<span class="inline-flex size-6 items-center justify-center bg-amber-500/20 rounded-full text-xs mr-3 align-middle">!</span>')
-                                                .replace(/💡/g, '<span class="inline-flex size-6 items-center justify-center bg-primary/20 rounded-full text-xs mr-3 align-middle">💡</span>')
-                                        }} />
-                                    </div>
-                                ))}
+                                {/* Categorized Feedback Cards */}
+                                {(() => {
+                                    const { skills, projects, experience, other } = getCategorizedFeedback();
+
+                                    return (
+                                        <div className="grid grid-cols-1 gap-6">
+                                            {/* 1. Skills Match Card */}
+                                            {skills.length > 0 && skills.map((item, i) => (
+                                                <Card key={`skill-${i}`} className="bg-zinc-900 border-zinc-800 rounded-2xl shadow-sm hover:border-zinc-700 transition-colors">
+                                                    <CardContent className="p-6 flex flex-col md:flex-row gap-6 items-start md:items-center justify-between">
+                                                        <div className="flex items-start gap-4">
+                                                            <div className={`p-2 rounded-full mt-1 ${item.status === 'success' ? 'bg-green-500/10' : 'bg-red-500/10'}`}>
+                                                                <item.icon className={`size-6 ${item.status === 'success' ? 'text-green-500' : 'text-red-500'}`} />
+                                                            </div>
+                                                            <div>
+                                                                <div className="flex items-center gap-3 mb-1">
+                                                                    <h3 className="font-semibold text-white text-lg">Skills Match</h3>
+                                                                    <Badge variant={item.status === 'success' ? 'success' : 'destructive'} className="rounded-full px-3">
+                                                                        {item.status === 'success' ? 'Strong' : 'Action Needed'}
+                                                                    </Badge>
+                                                                </div>
+                                                                <div className="text-slate-300 text-sm leading-relaxed"
+                                                                    dangerouslySetInnerHTML={{ __html: cleanFeedbackText(item.original) }}
+                                                                />
+                                                                {item.status === 'success' && (
+                                                                    <div className="mt-3 w-32">
+                                                                        <Progress value={100} className="h-1.5" />
+                                                                    </div>
+                                                                )}
+                                                            </div>
+                                                        </div>
+                                                    </CardContent>
+                                                </Card>
+                                            ))}
+
+                                            {/* 2. Project Impact Card */}
+                                            {projects.length > 0 && projects.map((item, i) => (
+                                                <Card key={`proj-${i}`} className="bg-zinc-900 border-zinc-800 rounded-2xl shadow-sm hover:border-zinc-700 transition-colors">
+                                                    <CardContent className="p-6 flex items-start gap-4">
+                                                        <div className={`p-2 rounded-full mt-1 ${item.status === 'success' ? 'bg-green-500/10' : 'bg-blue-500/10'}`}>
+                                                            <item.icon className={`size-6 ${item.status === 'success' ? 'text-green-500' : 'text-blue-500'}`} />
+                                                        </div>
+                                                        <div className="flex-1">
+                                                            <div className="flex items-center gap-3 mb-1">
+                                                                <h3 className="font-semibold text-white text-lg">{item.title}</h3>
+                                                                <Badge variant={item.status === 'success' ? 'success' : 'info'} className="rounded-full px-3">
+                                                                    {item.status === 'success' ? 'Strong' : 'Improve'}
+                                                                </Badge>
+                                                            </div>
+                                                            <div className="text-slate-300 text-sm leading-relaxed"
+                                                                dangerouslySetInnerHTML={{ __html: cleanFeedbackText(item.original) }}
+                                                            />
+                                                            {item.status === 'success' && (
+                                                                <div className="mt-3 w-32">
+                                                                    <Progress value={100} className="h-1.5" />
+                                                                </div>
+                                                            )}
+                                                        </div>
+                                                    </CardContent>
+                                                </Card>
+                                            ))}
+
+                                            {/* 3. Experience Relevance Card */}
+                                            {experience.length > 0 && experience.map((item, i) => (
+                                                <Card key={`exp-${i}`} className="bg-zinc-900 border-zinc-800 rounded-2xl shadow-sm hover:border-zinc-700 transition-colors">
+                                                    <CardContent className="p-6 flex items-start gap-4">
+                                                        <div className="p-2 rounded-full mt-1 bg-yellow-500/10">
+                                                            <AlertTriangle className="size-6 text-yellow-500" />
+                                                        </div>
+                                                        <div className="flex-1">
+                                                            <div className="flex items-center gap-3 mb-1">
+                                                                <h3 className="font-semibold text-white text-lg">Experience Relevance</h3>
+                                                                <Badge variant="warning" className="rounded-full px-3">Attention</Badge>
+                                                            </div>
+                                                            <div className="text-slate-300 text-sm leading-relaxed"
+                                                                dangerouslySetInnerHTML={{ __html: cleanFeedbackText(item.original) }}
+                                                            />
+
+                                                            {/* Example badged keywords if missing */}
+                                                            {result.missing_skills && result.missing_skills.length > 0 && i === 0 && (
+                                                                <div className="flex flex-wrap gap-2 mt-3">
+                                                                    {result.missing_skills.slice(0, 5).map((skill, k) => (
+                                                                        <Badge key={k} variant="outline" className="text-yellow-500 border-yellow-500/30 bg-yellow-500/5">
+                                                                            {skill}
+                                                                        </Badge>
+                                                                    ))}
+                                                                    {result.missing_skills.length > 5 && (
+                                                                        <span className="text-xs text-neutral-500 self-center">+{result.missing_skills.length - 5} more</span>
+                                                                    )}
+                                                                </div>
+                                                            )}
+                                                        </div>
+                                                    </CardContent>
+                                                </Card>
+                                            ))}
+
+                                            {/* Final Verdict / Other Feedback */}
+                                            {other.length > 0 && other.map((item, i) => {
+                                                const isFinalVerdict = item.type === 'overall';
+                                                return (
+                                                    <Card key={`other-${i}`} className={`rounded-2xl shadow-sm transition-colors ${isFinalVerdict
+                                                        ? 'bg-gradient-to-br from-zinc-900 to-blue-900/20 border-blue-500/30 hover:border-blue-500/40'
+                                                        : 'bg-zinc-900 border-zinc-800 hover:border-zinc-700'
+                                                        }`}>
+                                                        <CardContent className="p-6 flex items-start gap-4">
+                                                            <div className={`p-2 rounded-full mt-1 ${isFinalVerdict ? 'bg-blue-500/10' : 'bg-neutral-800'
+                                                                }`}>
+                                                                <item.icon className={`size-6 ${isFinalVerdict ? 'text-blue-400' : 'text-neutral-400'
+                                                                    }`} />
+                                                            </div>
+                                                            <div className="flex-1">
+                                                                <div className="flex items-center gap-3 mb-1">
+                                                                    <h3 className="font-semibold text-white text-lg">{item.title}</h3>
+                                                                </div>
+                                                                <div className="text-slate-300 text-sm leading-relaxed"
+                                                                    dangerouslySetInnerHTML={{ __html: cleanFeedbackText(item.original) }}
+                                                                />
+                                                            </div>
+                                                        </CardContent>
+                                                    </Card>
+                                                );
+                                            })}
+
+                                        </div>
+                                    );
+                                })()}
                             </div>
 
                         </motion.div>

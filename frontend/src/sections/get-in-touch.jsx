@@ -37,7 +37,7 @@ export default function GetInTouch() {
                     <textarea name='message' rows={8} placeholder='Enter your message' className='resize-none w-full mt-2 p-3 outline-none rounded-lg focus-within:ring-1 transition focus:ring-primary border border-slate-700' />
                 </motion.div>
 
-                <motion.button type='submit' className='w-max flex items-center gap-2 bg-primary hover:bg-primary-dark text-white px-8 py-3 rounded-full'
+                <motion.button type='submit' className='w-max flex items-center gap-2 bg-primary hover:bg-primary-dark text-black px-8 py-3 rounded-full'
                     initial={{ y: 150, opacity: 0 }}
                     whileInView={{ y: 0, opacity: 1 }}
                     viewport={{ once: true }}

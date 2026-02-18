@@ -52,7 +52,7 @@ export default function TiltedImage({ rotateAmplitude = 3, }) {
             transition={{ type: "spring", stiffness: 320, damping: 70, mass: 1 }}
         >
             <motion.div className="relative [transform-style:preserve-3d] w-full max-w-4xl" style={{ rotateX, rotateY }} >
-                <img src="https://placehold.co/1200x800/1e1e2e/ffffff?text=AI+Dashboard+Preview"
+                <img src="./assets/dashboard-preview.png"
                     className="w-full rounded-[15px] will-change-transform [transform:translateZ(0)] border border-white/10 shadow-2xl"
                     alt="AI Resume Analyzer Dashboard"
                 />
