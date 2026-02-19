@@ -177,7 +177,7 @@ export default function Dashboard() {
                         <div className="size-8 bg-white rounded-lg flex items-center justify-center shadow-lg shadow-white/20">
                             <Sparkles className="text-black size-5" />
                         </div>
-                        <span className="font-bold text-lg tracking-tight text-white">InSight ATS</span>
+                        <span className="font-bold text-lg tracking-tight text-white">InSightATS</span>
                     </a>
 
                     <div className="flex items-center gap-6">
@@ -242,7 +242,7 @@ export default function Dashboard() {
                                 <label className="text-xs font-bold text-white uppercase tracking-wider flex items-center gap-2">
                                     Resume File
                                 </label>
-                                {file && <span className="text-xs font-medium text-black bg-white px-2 py-1 rounded-full">Uploaded</span>}
+                                {file && <span className="text-xs font-bold text-white bg-green-500 px-3 py-1 rounded-full uppercase tracking-wider shadow-lg shadow-green-500/20">Uploaded</span>}
                             </div>
 
                             <div className="relative">
@@ -260,8 +260,8 @@ export default function Dashboard() {
                                 `}>
                                     {file ? (
                                         <>
-                                            <div className="size-10 bg-white rounded-xl flex items-center justify-center shadow-lg">
-                                                <CheckCircle className="size-5 text-black" />
+                                            <div className="size-10 bg-green-500 rounded-xl flex items-center justify-center shadow-lg shadow-green-500/20">
+                                                <CheckCircle className="size-5 text-white" />
                                             </div>
                                             <div className="text-center">
                                                 <p className="font-medium text-white text-sm truncate max-w-[200px]">{file.name}</p>

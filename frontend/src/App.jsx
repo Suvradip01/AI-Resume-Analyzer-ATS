@@ -2,8 +2,6 @@ import { Routes, Route } from "react-router-dom";
 import { SignedIn, SignedOut, RedirectToSignIn } from "@clerk/clerk-react";
 
 import GetInTouch from "./sections/get-in-touch";
-import TrustedCompanies from "./sections/trusted-companies";
-import Footer from "./components/footer";
 import LenisScroll from "./components/lenis-scroll";
 import Navbar from "./components/navbar";
 import AboutOurApps from "./sections/about-our-apps";
@@ -23,12 +21,8 @@ function LandingPage() {
                 <HeroSection />
                 <OurLatestCreation />
                 <AboutOurApps />
-                {/* <OurTestimonials /> Removed per user request */}
-                {/* <TrustedCompanies /> Removed per user request */}
                 <GetInTouch />
-                {/* <SubscribeNewsletter /> Removed per user request */}
             </main>
-            {/* <Footer /> Removed per user request */}
         </>
     );
 }

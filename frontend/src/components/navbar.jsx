@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { MenuIcon, XIcon } from "lucide-react";
+import { MenuIcon, XIcon, Sparkles } from "lucide-react";
 import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
 import { SignedIn, SignedOut, UserButton } from "@clerk/clerk-react";
@@ -16,10 +16,6 @@ export default function Navbar() {
             text: "About",
         },
         {
-            href: "#testimonials",
-            text: "Testimonials",
-        },
-        {
             href: "#contact",
             text: "Contact",
         },
@@ -32,9 +28,12 @@ export default function Navbar() {
                 viewport={{ once: true }}
                 transition={{ type: "spring", stiffness: 250, damping: 70, mass: 1 }}
             >
-                <a href="https://prebuiltui.com?utm_source=agentix">
-                    <img className="h-9 w-auto" src="/assets/logo.svg" width={138} height={36} alt="logo" />
-                </a>
+                <Link to="/" className="flex items-center gap-3 hover:opacity-80 transition cursor-pointer">
+                    <div className="size-8 bg-white rounded-lg flex items-center justify-center shadow-lg shadow-white/20">
+                        <Sparkles className="text-black size-5" />
+                    </div>
+                    <span className="font-bold text-lg tracking-tight text-white">InSightATS</span>
+                </Link>
 
                 <div className="hidden lg:flex items-center gap-8 transition duration-500">
                     {navlinks.map((link) => (

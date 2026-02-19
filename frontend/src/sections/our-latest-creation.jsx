@@ -11,19 +11,19 @@ export default function OurLatestCreation() {
         {
             title: "Resume Parsing",
             description: "Advanced algorithms extract and structure your resume data for precise analysis.",
-            image: "https://images.unsplash.com/photo-1586281380349-632531db7ed4?q=80&w=800&h=400&auto=format&fit=crop",
+            image: "./assets/dashboard-preview.png",
             align: "object-center",
         },
         {
             title: "Smart Feedback",
             description: "Get actionable insights to improve your resume's impact and readability.",
-            image: "https://images.unsplash.com/photo-1551288049-bebda4e38f71?q=80&w=800&h=400&auto=format&fit=crop",
+            image: "./assets/score.png",
             align: "object-right",
         },
         {
             title: "ATS Optimization",
             description: "Ensure your resume passes Applicant Tracking Systems with our scoring engine.",
-            image: "https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?q=80&w=800&h=400&auto=format&fit=crop",
+            image: "./assets/feedback.png",
             align: "object-center",
         },
     ];

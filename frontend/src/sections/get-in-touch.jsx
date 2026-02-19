@@ -5,7 +5,7 @@ import { motion } from "framer-motion";
 export default function GetInTouch() {
     return (
         <section className="flex flex-col items-center" id="contact">
-            <SectionTitle title="Get in touch" description="A visual collection of our most recent works - each piece crafted with intention, emotion, and style." />
+            <SectionTitle title="Get in touch" description="Have questions about our AI-powered resume analysis or want to learn more about our fair recruitment solutions? We'd love to hear from you." />
             <form onSubmit={(e) => e.preventDefault()} className='grid sm:grid-cols-2 gap-3 sm:gap-5 max-w-3xl mx-auto text-slate-400 mt-16 w-full' >
                 <motion.div
                     initial={{ y: 150, opacity: 0 }}

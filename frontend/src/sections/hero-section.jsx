@@ -2,8 +2,11 @@ import { ArrowRight } from "lucide-react";
 import { motion } from "framer-motion";
 import TiltedImage from "../components/tilt-image";
 import { Link } from "react-router-dom";
+import { FlipWords } from "../components/flip-words";
 
 export default function HeroSection() {
+    const words = ["Dream job", "Next Step", "True Path"];
+
     return (
         <section className="flex flex-col items-center -mt-18">
             <motion.svg className="absolute -z-10 w-full -mt-40 md:mt-0" width="1440" height="676" viewBox="0 0 1440 676" fill="none" xmlns="http://www.w3.org/2000/svg"
@@ -29,13 +32,19 @@ export default function HeroSection() {
                 <div className="size-2.5 bg-green-500 rounded-full animate-pulse"></div>
                 <span>AI Powered Resume Analysis</span>
             </motion.div>
-            <motion.h1 className="text-center text-5xl leading-[68px] md:text-6xl md:leading-[70px] mt-4 font-semibold max-w-2xl"
+            <motion.h1 className="text-center text-4xl md:text-6xl lg:text-7xl mt-4 font-bold tracking-tight leading-tight md:leading-[1.1] max-w-4xl mx-auto"
                 initial={{ y: 50, opacity: 0 }}
                 whileInView={{ y: 0, opacity: 1 }}
                 viewport={{ once: true }}
                 transition={{ type: "spring", stiffness: 240, damping: 70, mass: 1 }}
             >
-                Get Your Dream Job with AI
+                <div className="flex flex-wrap justify-center items-center gap-x-3">
+                    <span>Get your</span>
+                    <span className="text-primary-mid">
+                        <FlipWords words={words} />
+                    </span>
+                </div>
+                <div className="text-white/60 text-3xl md:text-5xl mt-3 font-medium">with AI</div>
             </motion.h1>
             <motion.p className="text-center text-base max-w-lg mt-2"
                 initial={{ y: 50, opacity: 0 }}
