@@ -6,6 +6,7 @@ import { SignedIn, SignedOut, UserButton } from "@clerk/clerk-react";
 
 export default function Navbar() {
     const [isMenuOpen, setIsMenuOpen] = useState(false);
+    const MotionNav = motion.nav;
     const navlinks = [
         {
             href: "#creations",
@@ -22,7 +23,7 @@ export default function Navbar() {
     ];
     return (
         <>
-            <motion.nav className="sticky top-0 z-50 flex items-center justify-between w-full h-18 px-6 md:px-16 lg:px-24 xl:px-32 backdrop-blur"
+            <MotionNav className="sticky top-0 z-50 flex items-center justify-between w-full h-18 px-6 md:px-16 lg:px-24 xl:px-32 backdrop-blur"
                 initial={{ y: -100, opacity: 0 }}
                 animate={{ y: 0, opacity: 1 }}
                 viewport={{ once: true }}
@@ -59,7 +60,7 @@ export default function Navbar() {
                 <button onClick={() => setIsMenuOpen(true)} className="lg:hidden active:scale-90 transition">
                     <MenuIcon className="size-6.5" />
                 </button>
-            </motion.nav>
+            </MotionNav>
             <div className={`fixed inset-0 z-[100] bg-background/80 backdrop-blur flex flex-col items-center justify-center text-lg gap-8 lg:hidden transition-transform duration-400 ${isMenuOpen ? "translate-x-0" : "-translate-x-full"}`}>
                 {navlinks.map((link) => (
                     <Link key={link.href} to={link.href} onClick={() => setIsMenuOpen(false)}>

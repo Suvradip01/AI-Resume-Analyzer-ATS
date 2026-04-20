@@ -5,6 +5,10 @@ import { useState } from 'react';
 import { motion } from 'framer-motion';
 
 const ResultPieChart = ({ score }) => {
+    const MotionPath = motion.path;
+    const MotionSpan = motion.span;
+    const MotionDiv = motion.div;
+
     const data = [
         { label: 'Score', value: score, color: '#8b5cf6' }, // Violet-500
         { label: 'Remaining', value: 100 - score, color: '#1e293b' }, // Slate-800
@@ -55,7 +59,7 @@ const ResultPieChart = ({ score }) => {
                                         }}
                                         style={{ cursor: 'pointer' }}
                                     >
-                                        <motion.path
+                                        <MotionPath
                                             d={arcPath}
                                             fill={colorScale(arc.data.label)}
                                             initial={{ opacity: 0, scale: 0 }}
@@ -66,7 +70,7 @@ const ResultPieChart = ({ score }) => {
                                             transition={{ duration: 0.2 }}
                                         />
                                         {isHovered && index === 0 && (
-                                            <motion.path
+                                            <MotionPath
                                                 d={arcPath}
                                                 fill="url(#glow)"
                                                 initial={{ opacity: 0 }}
@@ -90,27 +94,27 @@ const ResultPieChart = ({ score }) => {
 
             {/* PieCenter - Center Label */}
             <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-                <motion.span
+                <MotionSpan
                     className="text-4xl font-bold text-white"
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.3 }}
                 >
                     {Math.round(score)}
-                </motion.span>
-                <motion.span
+                </MotionSpan>
+                <MotionSpan
                     className="text-sm text-gray-400"
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     transition={{ delay: 0.5 }}
                 >
                     Total Score
-                </motion.span>
+                </MotionSpan>
             </div>
 
             {/* Tooltip */}
             {tooltipData && (
-                <motion.div
+                <MotionDiv
                     className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-full mb-2 bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 shadow-xl"
                     initial={{ opacity: 0, y: 5 }}
                     animate={{ opacity: 1, y: 0 }}
@@ -119,7 +123,7 @@ const ResultPieChart = ({ score }) => {
                     <div className="text-sm text-white font-medium">{tooltipData.label}</div>
                     <div className="text-xs text-violet-400 font-bold">{tooltipData.percentage}%</div>
                     <div className="absolute bottom-0 left-1/2 -translate-x-1/2 translate-y-full w-0 h-0 border-l-[6px] border-l-transparent border-r-[6px] border-r-transparent border-t-[6px] border-t-slate-700"></div>
-                </motion.div>
+                </MotionDiv>
             )}
         </div>
     );

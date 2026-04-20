@@ -2,9 +2,23 @@ node_modules/
 .venv/
 __pycache__/
 *.pyc
+*.pyo
 .env
 dist/
 build/
 .DS_Store
 .idea/
 .vscode/
+
+# Local model artifacts (keep out of git)
+backend/models/
+backend/models/*
+!backend/models/**/.gitkeep
+backend/models/**/*.safetensors
+backend/models/**/*.bin
+
+# ML training artifacts
+*.log
+runs/
+wandb/
+lightning_logs/

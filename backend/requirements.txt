@@ -1,9 +1,17 @@
 fastapi
 uvicorn
-spacy
-sentence-transformers
+transformers>=4.38.2
+safetensors>=0.4.0
+numpy
 pdfplumber
 python-docx
 pydantic
 python-multipart
-torch --index-url https://download.pytorch.org/whl/cpu
+sentencepiece
+protobuf
+# PyTorch is required for M1/M2/M3 inference.
+# Install the flavor that matches your machine (CPU vs CUDA) using PyTorch's official instructions.
+torch
+
+# Optional explainability (very slow per request); enable via ENABLE_SHAP=1.
+# shap

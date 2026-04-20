@@ -11,6 +11,7 @@ import OurLatestCreation from "./sections/our-latest-creation";
 // Pages
 import Dashboard from "./pages/Dashboard";
 import SignInPage from "./pages/sign-in";
+import SignUpPage from "./pages/sign-up";
 
 function LandingPage() {
     return (
@@ -32,6 +33,7 @@ export default function App() {
         <Routes>
             <Route path="/" element={<LandingPage />} />
             <Route path="/sign-in/*" element={<SignInPage />} />
+            <Route path="/sign-up/*" element={<SignUpPage />} />
             <Route
                 path="/dashboard"
                 element={

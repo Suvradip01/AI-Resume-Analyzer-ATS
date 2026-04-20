@@ -1,5 +1,4 @@
 import SectionTitle from "../components/section-title";
-import { motion } from "framer-motion";
 
 import { memo } from "react";
 

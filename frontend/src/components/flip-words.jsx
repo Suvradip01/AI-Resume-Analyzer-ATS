@@ -4,6 +4,8 @@ import { AnimatePresence, motion } from "framer-motion";
 import { twMerge } from "tailwind-merge";
 
 export const FlipWords = ({ words, duration = 3000, className }) => {
+    const MotionSpan = motion.span;
+
     const [currentWord, setCurrentWord] = useState(words[0]);
     const [isAnimating, setIsAnimating] = useState(false);
 
@@ -35,7 +37,7 @@ export const FlipWords = ({ words, duration = 3000, className }) => {
                     setIsAnimating(false);
                 }}
             >
-                <motion.span
+                <MotionSpan
                     key={currentWord}
                     initial={{
                         opacity: 0,
@@ -62,7 +64,7 @@ export const FlipWords = ({ words, duration = 3000, className }) => {
                     {currentWord.split(" ").map((word, wordIndex) => (
                         <span key={word + wordIndex} className="inline-block">
                             {word.split("").map((letter, letterIndex) => (
-                                <motion.span
+                                <MotionSpan
                                     key={word + letterIndex}
                                     initial={{ opacity: 0, y: 10, filter: "blur(8px)" }}
                                     animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
@@ -73,12 +75,12 @@ export const FlipWords = ({ words, duration = 3000, className }) => {
                                     className="inline-block"
                                 >
                                     {letter}
-                                </motion.span>
+                                </MotionSpan>
                             ))}
                             <span className="inline-block">&nbsp;</span>
                         </span>
                     ))}
-                </motion.span>
+                </MotionSpan>
             </AnimatePresence>
         </span>
     );

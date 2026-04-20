@@ -5,11 +5,16 @@ import { Link } from "react-router-dom";
 import { FlipWords } from "../components/flip-words";
 
 export default function HeroSection() {
+    const MotionSvg = motion.svg;
+    const MotionDiv = motion.div;
+    const MotionH1 = motion.h1;
+    const MotionP = motion.p;
+
     const words = ["Dream job", "Next Step", "True Path"];
 
     return (
         <section className="flex flex-col items-center -mt-18">
-            <motion.svg className="absolute -z-10 w-full -mt-40 md:mt-0" width="1440" height="676" viewBox="0 0 1440 676" fill="none" xmlns="http://www.w3.org/2000/svg"
+            <MotionSvg className="absolute -z-10 w-full -mt-40 md:mt-0" width="1440" height="676" viewBox="0 0 1440 676" fill="none" xmlns="http://www.w3.org/2000/svg"
                 initial={{ opacity: 0 }}
                 whileInView={{ opacity: 1 }}
                 viewport={{ once: true }}
@@ -22,8 +27,8 @@ export default function HeroSection() {
                         <stop offset="1" stopColor="#ffffff" />
                     </radialGradient>
                 </defs>
-            </motion.svg>
-            <motion.div className="flex items-center mt-48 gap-2 border border-slate-600 text-gray-50 rounded-full px-4 py-2"
+            </MotionSvg>
+            <MotionDiv className="flex items-center mt-48 gap-2 border border-slate-600 text-gray-50 rounded-full px-4 py-2"
                 initial={{ y: -20, opacity: 0 }}
                 whileInView={{ y: 0, opacity: 1 }}
                 viewport={{ once: true }}
@@ -31,8 +36,8 @@ export default function HeroSection() {
             >
                 <div className="size-2.5 bg-green-500 rounded-full animate-pulse"></div>
                 <span>AI Powered Resume Analysis</span>
-            </motion.div>
-            <motion.h1 className="text-center text-4xl md:text-6xl lg:text-7xl mt-4 font-bold tracking-tight leading-tight md:leading-[1.1] max-w-4xl mx-auto"
+            </MotionDiv>
+            <MotionH1 className="text-center text-4xl md:text-6xl lg:text-7xl mt-4 font-bold tracking-tight leading-tight md:leading-[1.1] max-w-4xl mx-auto"
                 initial={{ y: 50, opacity: 0 }}
                 whileInView={{ y: 0, opacity: 1 }}
                 viewport={{ once: true }}
@@ -45,16 +50,16 @@ export default function HeroSection() {
                     </span>
                 </div>
                 <div className="text-white/60 text-3xl md:text-5xl mt-3 font-medium">with AI</div>
-            </motion.h1>
-            <motion.p className="text-center text-base max-w-lg mt-2"
+            </MotionH1>
+            <MotionP className="text-center text-base max-w-lg mt-2"
                 initial={{ y: 50, opacity: 0 }}
                 whileInView={{ y: 0, opacity: 1 }}
                 viewport={{ once: true }}
                 transition={{ delay: 0.2, type: "spring", stiffness: 320, damping: 70, mass: 1 }}
             >
                 Upload your resume and get detailed feedback instantly. Fix gaps, improve specific projects, and beat the ATS.
-            </motion.p>
-            <motion.div className="flex items-center gap-4 mt-8"
+            </MotionP>
+            <MotionDiv className="flex items-center gap-4 mt-8"
                 initial={{ y: 50, opacity: 0 }}
                 whileInView={{ y: 0, opacity: 1 }}
                 viewport={{ once: true }}
@@ -65,7 +70,7 @@ export default function HeroSection() {
                     <ArrowRight className="size-5" />
                 </a>
 
-            </motion.div>
+            </MotionDiv>
             <TiltedImage />
         </section>
     );

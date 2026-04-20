@@ -3,6 +3,8 @@ import { motion } from "framer-motion";
 import SectionTitle from "../components/section-title";
 
 export default function OurLatestCreation() {
+    const MotionDiv = motion.div;
+
     const [isHovered, setIsHovered] = useState(false);
     const [activeIndex, setActiveIndex] = useState(0);
     const [className, setClassName] = useState("");
@@ -45,7 +47,7 @@ export default function OurLatestCreation() {
 
             <div className="flex items-center gap-4 h-100 w-full max-w-5xl mt-18 mx-auto" onMouseEnter={() => setIsHovered(true)} onMouseLeave={() => setIsHovered(false)} >
                 {sectionData.map((data, index) => (
-                    <motion.div key={data.title} className={`relative group flex-grow h-[400px] rounded-xl overflow-hidden ${isHovered && className ? "hover:w-full w-56" : index === activeIndex ? "w-full" : "w-56"} ${className} ${!className ? "pointer-events-none" : ""}`}
+                    <MotionDiv key={data.title} className={`relative group flex-grow h-[400px] rounded-xl overflow-hidden ${isHovered && className ? "hover:w-full w-56" : index === activeIndex ? "w-full" : "w-56"} ${className} ${!className ? "pointer-events-none" : ""}`}
                         initial={{ y: 150, opacity: 0 }}
                         whileInView={{ y: 0, opacity: 1 }}
                         viewport={{ once: true }}
@@ -57,7 +59,7 @@ export default function OurLatestCreation() {
                             <h1 className="text-3xl font-semibold">{data.title}</h1>
                             <p className="text-sm mt-2">{data.description}</p>
                         </div>
-                    </motion.div>
+                    </MotionDiv>
                 ))}
             </div>
         </section>

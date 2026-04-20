@@ -10,12 +10,14 @@ import { Alert, AlertTitle, AlertDescription } from "../components/ui/alert";
 import { Progress } from "../components/ui/progress";
 
 export default function Dashboard() {
-    const { user } = useUser();
+    useUser();
     const [file, setFile] = useState(null);
     const [jobDescription, setJobDescription] = useState("");
     const [loading, setLoading] = useState(false);
     const [result, setResult] = useState(null);
     const [error, setError] = useState("");
+
+    const MotionDiv = motion.div;
 
     const handleFileChange = (e) => {
         const selected = e.target.files[0];
@@ -80,7 +82,7 @@ export default function Dashboard() {
         let cleaned = text;
 
         // 1. Globally remove unicode replacement characters and common artifacts
-        cleaned = cleaned.replace(/[\ufffd\uFFFD\u203D◆♦️]/g, '');
+        cleaned = cleaned.replace(/[\uFFFD\u203D◆♦]/g, "");
 
         // 2. Handle specific "Project Complexity" format to preserve the Level
         // Backend pattern: "**{Name} ({Level})**: ..." -> We want "{Level}. ..."
@@ -97,7 +99,7 @@ export default function Dashboard() {
 
         // 4. Remove any remaining leading non-alphanumeric characters (emojis, symbols)
         // Keep: Letters, Numbers, Quotes, Brackets, Markdown (*, _, `)
-        cleaned = cleaned.replace(/^[^a-zA-Z0-9*("'`\[\]]+/g, '');
+        cleaned = cleaned.replace(/^[^a-zA-Z0-9*("'`[\]]+/g, "");
 
         // 5. Convert markdown bold to HTML strong
         cleaned = cleaned.replace(/\*\*(.*?)\*\*/g, '<strong class="text-white">$1</strong>');
@@ -212,7 +214,7 @@ export default function Dashboard() {
             <main className="relative z-10 w-full max-w-6xl mx-auto px-6 pt-28 pb-10 flex flex-col items-center justify-center min-h-screen">
 
                 {/* Intro - Compact */}
-                <motion.div
+                <MotionDiv
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
                     className="text-center mb-8"
@@ -223,10 +225,10 @@ export default function Dashboard() {
                     <p className="text-neutral-400 text-sm md:text-base max-w-lg mx-auto">
                         Get instant, AI-powered compatibility scoring and feedback.
                     </p>
-                </motion.div>
+                </MotionDiv>
 
                 {/* Main Content Grid */}
-                <motion.div
+                <MotionDiv
                     initial={{ opacity: 0, scale: 0.98 }}
                     animate={{ opacity: 1, scale: 1 }}
                     transition={{ delay: 0.1, duration: 0.4 }}
@@ -305,10 +307,10 @@ export default function Dashboard() {
                             />
                         </div>
                     </div>
-                </motion.div>
+                </MotionDiv>
 
                 {/* Floating Action Button */}
-                <motion.div
+                <MotionDiv
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.2 }}
@@ -316,7 +318,7 @@ export default function Dashboard() {
                 >
                     <AnimatePresence>
                         {error && (
-                            <motion.div
+                            <MotionDiv
                                 initial={{ opacity: 0, height: 0, marginBottom: 0 }}
                                 animate={{ opacity: 1, height: "auto", marginBottom: 12 }}
                                 exit={{ opacity: 0, height: 0, marginBottom: 0 }}
@@ -326,7 +328,7 @@ export default function Dashboard() {
                                     <AlertCircle className="size-4 shrink-0" />
                                     <span>{error}</span>
                                 </div>
-                            </motion.div>
+                            </MotionDiv>
                         )}
                     </AnimatePresence>
 
@@ -353,12 +355,12 @@ export default function Dashboard() {
                             </>
                         )}
                     </button>
-                </motion.div>
+                </MotionDiv>
 
                 {/* Results Section */}
                 <AnimatePresence>
                     {result && (
-                        <motion.div
+                        <MotionDiv
                             id="results-section"
                             initial={{ opacity: 0, y: 40 }}
                             animate={{ opacity: 1, y: 0 }}
@@ -520,7 +522,7 @@ export default function Dashboard() {
                                 })()}
                             </div>
 
-                        </motion.div>
+                        </MotionDiv>
                     )}
                 </AnimatePresence>
             </main>

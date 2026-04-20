@@ -4,6 +4,11 @@ import { scaleLinear } from '@visx/scale';
 import { motion, AnimatePresence } from 'framer-motion';
 
 const ResultRadarChart = ({ data }) => {
+    const MotionPath = motion.path;
+    const MotionCircle = motion.circle;
+    const MotionDiv = motion.div;
+    const MotionG = motion.g;
+
     // data: [{ subject: 'Skills', A: 80, fullMark: 100 }, ...]
     const [hoveredIndex, setHoveredIndex] = useState(null);
 
@@ -158,7 +163,7 @@ const ResultRadarChart = ({ data }) => {
                                     {/* Glow effect when hovered */}
                                     <AnimatePresence>
                                         {isHovered && (
-                                            <motion.path
+                                            <MotionPath
                                                 d={pathData}
                                                 fill="none"
                                                 stroke={color}
@@ -173,7 +178,7 @@ const ResultRadarChart = ({ data }) => {
                                     </AnimatePresence>
 
                                     {/* Main polygon for this series */}
-                                    <motion.path
+                                    <MotionPath
                                         d={pathData}
                                         fill={color}
                                         fillOpacity={isHovered ? 0.35 : isFaded ? 0.08 : 0.2}
@@ -207,7 +212,7 @@ const ResultRadarChart = ({ data }) => {
                                     {/* Hover glow ring */}
                                     <AnimatePresence>
                                         {isHovered && (
-                                            <motion.circle
+                                            <MotionCircle
                                                 cx={point.x}
                                                 cy={point.y}
                                                 r={14}
@@ -222,7 +227,7 @@ const ResultRadarChart = ({ data }) => {
                                     </AnimatePresence>
 
                                     {/* Point itself */}
-                                    <motion.circle
+                                    <MotionCircle
                                         cx={point.x}
                                         cy={point.y}
                                         r={point.value > 0 ? 4 : 2}
@@ -246,7 +251,7 @@ const ResultRadarChart = ({ data }) => {
                                     {/* Tooltip on hover */}
                                     <AnimatePresence>
                                         {isHovered && (
-                                            <motion.g
+                                            <MotionG
                                                 initial={{ opacity: 0, y: -4 }}
                                                 animate={{ opacity: 1, y: 0 }}
                                                 exit={{ opacity: 0, y: -4 }}
@@ -274,7 +279,7 @@ const ResultRadarChart = ({ data }) => {
                                                 >
                                                     {point.value}%
                                                 </text>
-                                            </motion.g>
+                                            </MotionG>
                                         )}
                                     </AnimatePresence>
                                 </g>
@@ -316,7 +321,7 @@ const ResultRadarChart = ({ data }) => {
                     const color = getColorForMetric(item.subject);
 
                     return (
-                        <motion.div
+                        <MotionDiv
                             key={`legend-${index}`}
                             className="flex items-center justify-between gap-3 px-3 py-2 rounded-lg cursor-pointer"
                             style={{
@@ -350,7 +355,7 @@ const ResultRadarChart = ({ data }) => {
                             >
                                 {Math.round(item.A)}%
                             </span>
-                        </motion.div>
+                        </MotionDiv>
                     );
                 })}
             </div>

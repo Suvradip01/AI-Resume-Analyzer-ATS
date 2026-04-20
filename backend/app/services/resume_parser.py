@@ -10,12 +10,15 @@ class ResumeParser:
         Extracts text from PDF or DOCX file content.
         """
         text = ""
-        if filename.lower().endswith('.pdf'):
+        lower = filename.lower()
+        if lower.endswith(".pdf"):
             text = ResumeParser._extract_from_pdf(file_content)
-        elif filename.lower().endswith('.docx'):
+        elif lower.endswith(".docx"):
             text = ResumeParser._extract_from_docx(file_content)
+        elif lower.endswith(".txt"):
+            text = file_content.decode("utf-8", errors="replace")
         else:
-            raise ValueError("Unsupported file format. Please upload PDF or DOCX.")
+            raise ValueError("Unsupported file format. Please upload PDF, DOCX, or TXT.")
         
         return ResumeParser._clean_text(text)
 

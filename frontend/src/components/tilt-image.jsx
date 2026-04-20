@@ -8,6 +8,9 @@ const springValues = {
 };
 
 export default function TiltedImage({ rotateAmplitude = 3, }) {
+    const MotionFigure = motion.figure;
+    const MotionDiv = motion.div;
+
     const ref = useRef(null);
     const x = useMotionValue(0);
     const y = useMotionValue(0);
@@ -45,18 +48,18 @@ export default function TiltedImage({ rotateAmplitude = 3, }) {
     }
 
     return (
-        <motion.figure ref={ref} className="relative w-full h-full [perspective:800px] mt-16 max-w-4xl mx-auto flex flex-col items-center justify-center" onMouseMove={handleMouse} onMouseLeave={handleMouseLeave}
+        <MotionFigure ref={ref} className="relative w-full h-full [perspective:800px] mt-16 max-w-4xl mx-auto flex flex-col items-center justify-center" onMouseMove={handleMouse} onMouseLeave={handleMouseLeave}
             initial={{ y: 150, opacity: 0 }}
             whileInView={{ y: 0, opacity: 1 }}
             viewport={{ once: true }}
             transition={{ type: "spring", stiffness: 320, damping: 70, mass: 1 }}
         >
-            <motion.div className="relative [transform-style:preserve-3d] w-full max-w-4xl" style={{ rotateX, rotateY }} >
+            <MotionDiv className="relative [transform-style:preserve-3d] w-full max-w-4xl" style={{ rotateX, rotateY }} >
                 <img src="./assets/dashboard-preview.png"
                     className="w-full rounded-[15px] will-change-transform [transform:translateZ(0)] border border-white/10 shadow-2xl"
                     alt="AI Resume Analyzer Dashboard"
                 />
-            </motion.div>
-        </motion.figure>
+            </MotionDiv>
+        </MotionFigure>
     );
 }
