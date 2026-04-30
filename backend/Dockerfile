@@ -19,9 +19,12 @@ WORKDIR /app
 # Copy requirements and install them as the user
 COPY --chown=user ./requirements.txt requirements.txt
 RUN pip install --no-cache-dir --upgrade -r requirements.txt
+RUN pip install --no-cache-dir huggingface_hub
 
-# Copy application source and models
-# In HF Spaces, models are pushed via Git LFS and are present in the repo
+# Download the models from a dedicated HF Model Repo to bypass the 1 GB Space limit
+RUN huggingface-cli download Suvradip01/insightats-models --local-dir /app/models --repo-type model
+
+# Copy application source (models are no longer needed in the space repo)
 COPY --chown=user . /app
 
 # Hugging Face Spaces use port 7860
