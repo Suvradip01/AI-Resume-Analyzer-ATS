@@ -10,10 +10,21 @@ def _env_bool(name: str, default: bool = False) -> bool:
     return v.strip().lower() in ("1", "true", "yes", "on")
 
 
+def _env_list(name: str, default: list) -> list:
+    """Read a comma-separated env var into a list, stripping whitespace."""
+    v = os.getenv(name)
+    if v is None:
+        return default
+    return [item.strip() for item in v.split(",") if item.strip()]
+
+
 class Settings:
     PROJECT_NAME: str = "InSightATS API"
     VERSION: str = "1.0.0"
     API_V1_STR: str = "/api/v1"
+
+    # Lightweight local storage (recruiter accounts + sessions)
+    DB_PATH: str = os.path.join(_BASE, "db.sqlite3")
 
     # Fine-tuned weights (see backend/models/)
     NER_MODEL_DIR: str = os.path.join(_BASE, "models", "ner_model")
@@ -22,6 +33,19 @@ class Settings:
 
     # SHAP explainability is very slow (~60s+ per request); off by default
     ENABLE_SHAP: bool = _env_bool("ENABLE_SHAP", False)
+
+    # CORS — set ALLOWED_ORIGINS as a comma-separated list in the environment.
+    # Example: ALLOWED_ORIGINS=https://insightats.vercel.app,https://www.insightats.com
+    ALLOWED_ORIGINS: list = _env_list(
+        "ALLOWED_ORIGINS",
+        default=[
+            "http://localhost",
+            "http://localhost:3000",
+            "http://127.0.0.1:3000",
+            "http://localhost:5173",
+            "http://127.0.0.1:5173",
+        ],
+    )
 
 
 settings = Settings()

@@ -33,7 +33,7 @@ def _composite_headline_score(
 ) -> int:
     """
     Blend M2 semantic match with the four radar dimensions.
-
+    
     Using only fit_score × 100 for the donut often under-reports strong JD/CV overlap when the
     classifier still favors "Partial Fit" — the radar then looks good while the headline stays ~60s.
     """
@@ -44,7 +44,7 @@ def _composite_headline_score(
         + 0.25 * project_score
         + 0.15 * structure_score
     )
-    # Slightly weight demonstrated resume evidence so keyword/structure alignment moves the needle.
+    # The user's M2 semantic ML model dictates 42% of the total score directly
     blended = 0.42 * m2 + 0.58 * dim
     return int(round(max(0.0, min(100.0, blended))))
 

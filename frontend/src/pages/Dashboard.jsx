@@ -175,10 +175,7 @@ export default function Dashboard() {
             <header className="fixed top-6 inset-x-0 z-50 flex justify-center px-6">
                 <div className="bg-black/40 backdrop-blur-md border border-white/10 rounded-full px-6 py-3 flex items-center justify-between shadow-2xl w-full max-w-6xl">
 
-                    <a href="/" className="flex items-center gap-3 hover:opacity-80 transition cursor-pointer">
-                        <div className="size-8 bg-white rounded-lg flex items-center justify-center shadow-lg shadow-white/20">
-                            <Sparkles className="text-black size-5" />
-                        </div>
+                    <a href="/" className="flex items-center gap-2 hover:opacity-80 transition cursor-pointer">
                         <span className="font-bold text-lg tracking-tight text-white">InSightATS</span>
                     </a>
 

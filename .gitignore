@@ -17,6 +17,13 @@ backend/models/*
 backend/models/**/*.safetensors
 backend/models/**/*.bin
 
+# Local SQLite DB (recruiter auth / sessions)
+backend/db.sqlite3
+backend/*.sqlite3
+
+# Local scratch/test files
+tmp_test/
+
 # ML training artifacts
 *.log
 runs/

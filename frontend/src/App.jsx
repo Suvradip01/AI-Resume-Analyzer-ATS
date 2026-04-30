@@ -1,4 +1,4 @@
-import { Routes, Route } from "react-router-dom";
+import { Navigate, Routes, Route } from "react-router-dom";
 import { SignedIn, SignedOut, RedirectToSignIn } from "@clerk/clerk-react";
 
 import GetInTouch from "./sections/get-in-touch";
@@ -12,6 +12,15 @@ import OurLatestCreation from "./sections/our-latest-creation";
 import Dashboard from "./pages/Dashboard";
 import SignInPage from "./pages/sign-in";
 import SignUpPage from "./pages/sign-up";
+import RecruiterLoginPage from "./pages/recruiter-login";
+import RecruiterDashboardPage from "./pages/recruiter-dashboard";
+
+/** Guards the recruiter dashboard — redirects to login if no valid token in storage. */
+function RequireRecruiter({ children }) {
+    const token = localStorage.getItem("recruiter_token");
+    if (!token) return <Navigate to="/recruiter" replace />;
+    return children;
+}
 
 function LandingPage() {
     return (
@@ -34,6 +43,15 @@ export default function App() {
             <Route path="/" element={<LandingPage />} />
             <Route path="/sign-in/*" element={<SignInPage />} />
             <Route path="/sign-up/*" element={<SignUpPage />} />
+            <Route path="/recruiter" element={<RecruiterLoginPage />} />
+            <Route
+                path="/recruiter/dashboard"
+                element={
+                    <RequireRecruiter>
+                        <RecruiterDashboardPage />
+                    </RequireRecruiter>
+                }
+            />
             <Route
                 path="/dashboard"
                 element={
