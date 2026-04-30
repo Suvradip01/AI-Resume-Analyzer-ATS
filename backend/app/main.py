@@ -25,4 +25,18 @@ app.include_router(recruiter.router, prefix="/api/v1/recruiter", tags=["recruite
 
 @app.get("/")
 def root():
-    return {"message": "Welcome to AI Resume Analyzer API"}
+    return {"message": "Welcome to InSightATS API", "version": settings.VERSION}
+
+
+@app.get("/health")
+def health():
+    """Lightweight liveness probe — Nginx / Oracle LB hits this."""
+    return {"status": "ok", "version": settings.VERSION}
+
+
+@app.get("/ready")
+def ready():
+    """Readiness probe — confirms ML models are loaded before accepting traffic."""
+    from app.services.pipeline.orchestrator import _orchestrator
+    loaded = _orchestrator is not None
+    return {"status": "ready" if loaded else "loading", "models_loaded": loaded}

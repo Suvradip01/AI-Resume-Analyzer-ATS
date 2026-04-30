@@ -9,6 +9,9 @@ import { Badge } from "../components/ui/badge";
 import { Alert, AlertTitle, AlertDescription } from "../components/ui/alert";
 import { Progress } from "../components/ui/progress";
 
+// Central API base — driven by VITE_API_BASE env var (set on Vercel for production)
+const API_URL = `${import.meta.env.VITE_API_BASE ?? "http://127.0.0.1:8000"}/api/v1/resume/analyze`;
+
 export default function Dashboard() {
     useUser();
     const [file, setFile] = useState(null);
@@ -52,7 +55,7 @@ export default function Dashboard() {
         formData.append("job_description", jobData);
 
         try {
-            const response = await fetch("http://127.0.0.1:8000/api/v1/resume/analyze", {
+            const response = await fetch(API_URL, {
                 method: "POST",
                 body: formData,
             });

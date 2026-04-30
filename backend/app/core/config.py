@@ -24,12 +24,15 @@ class Settings:
     API_V1_STR: str = "/api/v1"
 
     # Lightweight local storage (recruiter accounts + sessions)
-    DB_PATH: str = os.path.join(_BASE, "db.sqlite3")
+    # On Oracle Cloud: set DB_PATH=/data/db.sqlite3 (persistent block volume)
+    DB_PATH: str = os.environ.get("DB_PATH", os.path.join(_BASE, "db.sqlite3"))
 
     # Fine-tuned weights (see backend/models/)
-    NER_MODEL_DIR: str = os.path.join(_BASE, "models", "ner_model")
-    MATCHER_MODEL_DIR: str = os.path.join(_BASE, "models", "matcher_model")
-    COMPLEXITY_MODEL_DIR: str = os.path.join(_BASE, "models", "complexity_model")
+    # On Oracle Cloud: set MODEL_DIR=/data/models  (persistent block volume)
+    _model_base: str = os.environ.get("MODEL_DIR", os.path.join(_BASE, "models"))
+    NER_MODEL_DIR: str        = os.path.join(os.environ.get("MODEL_DIR", os.path.join(_BASE, "models")), "ner_model")
+    MATCHER_MODEL_DIR: str    = os.path.join(os.environ.get("MODEL_DIR", os.path.join(_BASE, "models")), "matcher_model")
+    COMPLEXITY_MODEL_DIR: str = os.path.join(os.environ.get("MODEL_DIR", os.path.join(_BASE, "models")), "complexity_model")
 
     # SHAP explainability is very slow (~60s+ per request); off by default
     ENABLE_SHAP: bool = _env_bool("ENABLE_SHAP", False)
