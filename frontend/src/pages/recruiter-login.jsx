@@ -1,18 +1,19 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Building2, Mail, Lock, Sparkles, CheckCircle2 } from "lucide-react";
-import { useClerk } from "@clerk/clerk-react";
+import { Building2, Mail, Lock, CheckCircle2, KeyRound } from "lucide-react";
+import { useSignIn, useSignUp } from "@clerk/clerk-react";
 import { motion, AnimatePresence } from "framer-motion";
-
-const API_BASE = `${import.meta.env.VITE_API_BASE}/api/v1/recruiter`;
 
 export default function RecruiterLoginPage() {
     const nav = useNavigate();
-    const { signOut } = useClerk();
-    const [mode, setMode] = useState("login");
+    const { isLoaded: isSignInLoaded, signIn, setActive: setSignInActive } = useSignIn();
+    const { isLoaded: isSignUpLoaded, signUp, setActive: setSignUpActive } = useSignUp();
+    
+    const [mode, setMode] = useState("login"); // "login", "register", "verify_signup", "forgot_password", "reset_password"
     const [company, setCompany] = useState("");
     const [username, setUsername] = useState("");
     const [password, setPassword] = useState("");
+    const [code, setCode] = useState("");
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState("");
 
@@ -24,31 +25,83 @@ export default function RecruiterLoginPage() {
             setError("Company name is required.");
             return;
         }
-        if (!username.trim() || !password) {
+        if ((mode === "login" || mode === "register") && (!username.trim() || !password)) {
             setError("Email and Password are required.");
+            return;
+        }
+        if (mode === "reset_password" && !password) {
+            setError("New Password is required.");
+            return;
+        }
+        if (mode === "register" || mode === "reset_password") {
+            const passwordRegex = /^(?=.*[0-9])(?=.*[^a-zA-Z0-9]).{8,}$/;
+            if (!passwordRegex.test(password)) {
+                setError("Password must be at least 8 characters long, including a number and a special character.");
+                return;
+            }
+        }
+        if (mode === "forgot_password" && !username.trim()) {
+            setError("Email is required.");
+            return;
+        }
+        if ((mode === "verify_signup" || mode === "reset_password") && !code.trim()) {
+            setError("Verification code is required.");
             return;
         }
 
         setLoading(true);
         try {
-            const payload = { username: username.trim(), password };
-            if (mode === "register") payload.company = company.trim();
-
-            const res = await fetch(`${API_BASE}/${mode}`, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(payload),
-            });
-            const data = await res.json().catch(() => ({}));
-
-            if (!res.ok) throw new Error(data.detail || "Authentication failed. Please check your credentials.");
-
-            localStorage.setItem("recruiter_token", data.token);
-            localStorage.setItem("recruiter_username", username.trim());
-            await signOut();
-            nav("/recruiter/dashboard");
+            if (mode === "register") {
+                if (!isSignUpLoaded) return;
+                await signUp.create({
+                    emailAddress: username.trim(),
+                    password,
+                    unsafeMetadata: { company: company.trim() }
+                });
+                await signUp.prepareEmailAddressVerification({ strategy: "email_code" });
+                setMode("verify_signup");
+            } 
+            else if (mode === "verify_signup") {
+                if (!isSignUpLoaded) return;
+                const completeSignUp = await signUp.attemptEmailAddressVerification({ code });
+                if (completeSignUp.status === "complete") {
+                    await setSignUpActive({ session: completeSignUp.createdSessionId });
+                    nav("/recruiter/dashboard");
+                }
+            }
+            else if (mode === "login") {
+                if (!isSignInLoaded) return;
+                const completeSignIn = await signIn.create({
+                    identifier: username.trim(),
+                    password,
+                });
+                if (completeSignIn.status === "complete") {
+                    await setSignInActive({ session: completeSignIn.createdSessionId });
+                    nav("/recruiter/dashboard");
+                }
+            }
+            else if (mode === "forgot_password") {
+                if (!isSignInLoaded) return;
+                await signIn.create({
+                    strategy: "reset_password_email_code",
+                    identifier: username.trim(),
+                });
+                setMode("reset_password");
+            }
+            else if (mode === "reset_password") {
+                if (!isSignInLoaded) return;
+                const result = await signIn.attemptFirstFactor({
+                    strategy: "reset_password_email_code",
+                    code,
+                    password,
+                });
+                if (result.status === "complete") {
+                    await setSignInActive({ session: result.createdSessionId });
+                    nav("/recruiter/dashboard");
+                }
+            }
         } catch (e) {
-            setError(e.message || "Something went wrong. Please try again.");
+            setError(e.errors?.[0]?.longMessage || e.message || "Something went wrong. Please try again.");
         } finally {
             setLoading(false);
         }
@@ -57,6 +110,7 @@ export default function RecruiterLoginPage() {
     const toggleMode = () => {
         setMode(mode === "login" ? "register" : "login");
         setError("");
+        setCode("");
     };
 
     return (
@@ -115,12 +169,18 @@ export default function RecruiterLoginPage() {
                 <div className="w-full max-w-[360px] mx-auto">
                     <div className="mb-10">
                         <h2 className="text-[32px] font-bold tracking-tight mb-2 text-white">
-                            {mode === "login" ? "Welcome back" : "Create an account"}
+                            {mode === "login" && "Welcome back"}
+                            {mode === "register" && "Create an account"}
+                            {mode === "verify_signup" && "Verify your email"}
+                            {mode === "forgot_password" && "Reset Password"}
+                            {mode === "reset_password" && "New Password"}
                         </h2>
                         <p className="text-neutral-400 text-sm font-medium">
-                            {mode === "login"
-                                ? "Enter your credentials to access the recruiter dashboard."
-                                : "Enter your company details to get started."}
+                            {mode === "login" && "Enter your credentials to access the recruiter dashboard."}
+                            {mode === "register" && "Enter your company details to get started."}
+                            {mode === "verify_signup" && `We sent a code to ${username}`}
+                            {mode === "forgot_password" && "Enter your email to receive a reset code."}
+                            {mode === "reset_password" && "Enter the code sent to your email and your new password."}
                         </p>
                     </div>
 
@@ -148,37 +208,58 @@ export default function RecruiterLoginPage() {
                             )}
                         </AnimatePresence>
 
-                        <div className="space-y-1.5">
-                            <label className="text-[13px] font-semibold text-neutral-300">Work Email / Username</label>
-                            <div className="relative group">
-                                <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 size-[18px] text-neutral-500 group-focus-within:text-white transition-colors" />
-                                <input
-                                    value={username}
-                                    onChange={(e) => setUsername(e.target.value)}
-                                    placeholder="name@company.com"
-                                    className="w-full pl-[38px] pr-4 py-3 bg-neutral-900 border border-neutral-800 rounded-xl text-sm text-white placeholder:text-neutral-600 focus:outline-none focus:ring-1 focus:ring-white focus:border-white transition-all shadow-sm"
-                                />
+                        {(mode === "login" || mode === "register" || mode === "forgot_password") && (
+                            <div className="space-y-1.5">
+                                <label className="text-[13px] font-semibold text-neutral-300">Work Email</label>
+                                <div className="relative group">
+                                    <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 size-[18px] text-neutral-500 group-focus-within:text-white transition-colors" />
+                                    <input
+                                        value={username}
+                                        onChange={(e) => setUsername(e.target.value)}
+                                        placeholder="name@company.com"
+                                        className="w-full pl-[38px] pr-4 py-3 bg-neutral-900 border border-neutral-800 rounded-xl text-sm text-white placeholder:text-neutral-600 focus:outline-none focus:ring-1 focus:ring-white focus:border-white transition-all shadow-sm"
+                                    />
+                                </div>
                             </div>
-                        </div>
+                        )}
 
-                        <div className="space-y-1.5">
-                            <div className="flex items-center justify-between">
-                                <label className="text-[13px] font-semibold text-neutral-300">Password</label>
-                                {mode === "login" && (
-                                    <a href="#" className="text-[13px] font-medium text-neutral-400 hover:text-white transition-colors">Forgot password?</a>
-                                )}
+                        {(mode === "verify_signup" || mode === "reset_password") && (
+                            <div className="space-y-1.5">
+                                <label className="text-[13px] font-semibold text-neutral-300">6-Digit Code</label>
+                                <div className="relative group">
+                                    <KeyRound className="absolute left-3.5 top-1/2 -translate-y-1/2 size-[18px] text-neutral-500 group-focus-within:text-white transition-colors" />
+                                    <input
+                                        value={code}
+                                        onChange={(e) => setCode(e.target.value)}
+                                        placeholder="123456"
+                                        className="w-full pl-[38px] pr-4 py-3 bg-neutral-900 border border-neutral-800 rounded-xl text-sm text-white placeholder:text-neutral-600 focus:outline-none focus:ring-1 focus:ring-white focus:border-white transition-all shadow-sm"
+                                    />
+                                </div>
                             </div>
-                            <div className="relative group">
-                                <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 size-[18px] text-neutral-500 group-focus-within:text-white transition-colors" />
-                                <input
-                                    type="password"
-                                    value={password}
-                                    onChange={(e) => setPassword(e.target.value)}
-                                    placeholder="••••••••"
-                                    className="w-full pl-[38px] pr-4 py-3 bg-neutral-900 border border-neutral-800 rounded-xl text-sm text-white placeholder:text-neutral-600 focus:outline-none focus:ring-1 focus:ring-white focus:border-white transition-all shadow-sm"
-                                />
+                        )}
+
+                        {(mode === "login" || mode === "register" || mode === "reset_password") && (
+                            <div className="space-y-1.5">
+                                <div className="flex items-center justify-between">
+                                    <label className="text-[13px] font-semibold text-neutral-300">
+                                        {mode === "reset_password" ? "New Password" : "Password"}
+                                    </label>
+                                    {mode === "login" && (
+                                        <button type="button" onClick={() => { setMode("forgot_password"); setError(""); }} className="text-[13px] font-medium text-neutral-400 hover:text-white transition-colors">Forgot password?</button>
+                                    )}
+                                </div>
+                                <div className="relative group">
+                                    <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 size-[18px] text-neutral-500 group-focus-within:text-white transition-colors" />
+                                    <input
+                                        type="password"
+                                        value={password}
+                                        onChange={(e) => setPassword(e.target.value)}
+                                        placeholder="••••••••"
+                                        className="w-full pl-[38px] pr-4 py-3 bg-neutral-900 border border-neutral-800 rounded-xl text-sm text-white placeholder:text-neutral-600 focus:outline-none focus:ring-1 focus:ring-white focus:border-white transition-all shadow-sm"
+                                    />
+                                </div>
                             </div>
-                        </div>
+                        )}
 
                         <AnimatePresence>
                             {error && (
@@ -199,20 +280,24 @@ export default function RecruiterLoginPage() {
                             {loading ? (
                                 <div className="size-4 border-2 border-black/20 border-t-black rounded-full animate-spin" />
                             ) : (
-                                mode === "login" ? "Sign In" : "Create Account"
+                                mode === "login" ? "Sign In" : 
+                                mode === "register" ? "Create Account" : 
+                                mode === "verify_signup" ? "Verify Code" :
+                                mode === "forgot_password" ? "Send Reset Code" :
+                                "Reset Password"
                             )}
                         </button>
                     </form>
 
                     <div className="mt-8 text-center">
                         <p className="text-[13px] font-medium text-neutral-500">
-                            {mode === "login" ? "Don't have an account? " : "Already have an account? "}
+                            {(mode === "login" || mode === "forgot_password") ? "Don't have an account? " : "Already have an account? "}
                             <button
                                 type="button"
                                 onClick={toggleMode}
                                 className="text-white hover:text-neutral-300 font-bold underline underline-offset-4 transition-colors"
                             >
-                                {mode === "login" ? "Sign up" : "Log in"}
+                                {(mode === "login" || mode === "forgot_password") ? "Sign up" : "Log in"}
                             </button>
                         </p>
                     </div>

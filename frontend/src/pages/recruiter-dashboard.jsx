@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Upload, FileText, LogOut, Home, Trophy, Award, Medal, CheckCircle2, AlertTriangle, Info, ChevronRight } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import { useAuth, useUser, useClerk } from "@clerk/clerk-react";
 import { Badge } from "../components/ui/badge";
 import { Progress } from "../components/ui/progress";
 
@@ -50,6 +51,9 @@ const getFeedbackIcon = (text) => {
 
 export default function RecruiterDashboardPage() {
     const nav = useNavigate();
+    const { isLoaded, isSignedIn, getToken } = useAuth();
+    const { user } = useUser();
+    const { signOut } = useClerk();
     const [files, setFiles] = useState([]);
     const [jdFile, setJdFile] = useState(null);
     const [loading, setLoading] = useState(false);
@@ -57,28 +61,35 @@ export default function RecruiterDashboardPage() {
     const [data, setData] = useState(null);
 
     useEffect(() => {
-        const token = localStorage.getItem("recruiter_token");
-        if (!token) {
+        if (isLoaded && !isSignedIn) {
             nav("/recruiter");
         }
-    }, [nav]);
+    }, [isLoaded, isSignedIn, nav]);
 
-    function logout() {
-        localStorage.removeItem("recruiter_token");
-        localStorage.removeItem("recruiter_username");
+    async function logout() {
+        await signOut();
         nav("/recruiter");
     }
 
     async function analyze() {
-        const currentToken = localStorage.getItem("recruiter_token");
-        if (!currentToken) {
-            nav("/recruiter");
-            return;
-        }
         if (!files.length || !jdFile) {
             setError("Upload at least 1 resume and a job description file.");
             return;
         }
+        
+        let token;
+        try {
+            token = await getToken();
+        } catch (e) {
+            nav("/recruiter");
+            return;
+        }
+
+        if (!token) {
+            nav("/recruiter");
+            return;
+        }
+
         setError("");
         setLoading(true);
         setData(null);
@@ -86,11 +97,15 @@ export default function RecruiterDashboardPage() {
             const form = new FormData();
             files.forEach((f) => form.append("resumes", f));
             form.append("job_description_file", jdFile);
+            
+            // Pass the company name in the headers so the backend knows it
+            const companyName = user?.unsafeMetadata?.company || "your company";
 
             const res = await fetch(API_BATCH, {
                 method: "POST",
                 headers: {
-                    Authorization: `Bearer ${currentToken}`,
+                    Authorization: `Bearer ${token}`,
+                    "X-Company-Name": companyName
                 },
                 body: form,
             });
