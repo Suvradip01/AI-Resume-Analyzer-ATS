@@ -1,5 +1,5 @@
 import { Navigate, Routes, Route } from "react-router-dom";
-import { SignedIn, SignedOut, RedirectToSignIn } from "@clerk/clerk-react";
+import { SignedIn, SignedOut, RedirectToSignIn, useUser } from "@clerk/clerk-react";
 
 import GetInTouch from "./sections/get-in-touch";
 import LenisScroll from "./components/lenis-scroll";
@@ -15,10 +15,20 @@ import SignUpPage from "./pages/sign-up";
 import RecruiterLoginPage from "./pages/recruiter-login";
 import RecruiterDashboardPage from "./pages/recruiter-dashboard";
 
-/** Guards the recruiter dashboard — redirects to login if no valid token in storage. */
+/** Guards the recruiter dashboard — redirects to login if not signed in via Clerk. */
 function RequireRecruiter({ children }) {
-    const token = localStorage.getItem("recruiter_token");
-    if (!token) return <Navigate to="/recruiter" replace />;
+    const { isLoaded, isSignedIn } = useUser();
+    
+    if (!isLoaded) {
+        return (
+            <div className="min-h-screen bg-black flex items-center justify-center">
+                <div className="size-8 border-4 border-white/20 border-t-white rounded-full animate-spin"></div>
+            </div>
+        );
+    }
+    
+    if (!isSignedIn) return <Navigate to="/recruiter" replace />;
+    
     return children;
 }
 

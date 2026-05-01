@@ -2,7 +2,7 @@ import { useState } from "react";
 import { MenuIcon, XIcon, Sparkles } from "lucide-react";
 import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
-import { SignedIn, SignedOut, UserButton } from "@clerk/clerk-react";
+import { SignedIn, SignedOut, UserButton, useUser, useAuth } from "@clerk/clerk-react";
 
 export default function Navbar() {
     const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -10,6 +10,13 @@ export default function Navbar() {
     const [dashDropOpen, setDashDropOpen] = useState(false);
     const [signDropOpen, setSignDropOpen] = useState(false);
     
+    const { user, isLoaded, isSignedIn } = useUser();
+    const { signOut } = useAuth();
+    
+    const isRecruiter = isSignedIn && user?.unsafeMetadata?.company;
+    const isCandidate = isSignedIn && !user?.unsafeMetadata?.company;
+    const recruiterEmail = user?.primaryEmailAddress?.emailAddress || "Recruiter";
+
     const MotionNav = motion.nav;
     const navlinks = [
         { href: "#creations", text: "Creations" },
@@ -40,7 +47,7 @@ export default function Navbar() {
                 <div className="hidden lg:flex items-center space-x-4">
                     
                     {/* NO ONE SIGNED IN (Neither Recruiter nor Candidate) */}
-                    {!localStorage.getItem("recruiter_username") && (
+                    {!isRecruiter && (
                         <SignedOut>
                             <div className="flex items-center gap-4 relative">
                                 <div className="relative">
@@ -77,7 +84,7 @@ export default function Navbar() {
                     )}
 
                     {/* ONLY RECRUITER SIGNED IN */}
-                    {localStorage.getItem("recruiter_username") && (
+                    {isRecruiter && (
                         <div className="flex items-center gap-4">
                             <Link to="/recruiter/dashboard" className="px-6 py-2 bg-primary hover:bg-white transition text-black text-sm font-medium rounded-md active:scale-95">
                                 Dashboard
@@ -90,10 +97,10 @@ export default function Navbar() {
                                     className="flex items-center gap-2 px-3 py-1.5 bg-neutral-900 rounded-full border border-white/20 hover:bg-neutral-800 transition cursor-pointer"
                                 >
                                     <div className="size-7 rounded-full bg-primary text-black flex items-center justify-center text-sm font-bold shadow-[0_0_10px_rgba(255,255,255,0.4)]">
-                                        {localStorage.getItem("recruiter_username")[0].toUpperCase()}
+                                        {recruiterEmail[0]?.toUpperCase()}
                                     </div>
                                     <div className="flex flex-col pr-2 text-left">
-                                        <span className="text-white text-sm font-medium leading-tight">{localStorage.getItem("recruiter_username")}</span>
+                                        <span className="text-white text-sm font-medium leading-tight max-w-[120px] truncate">{recruiterEmail}</span>
                                         <span className="text-[10px] text-neutral-400 uppercase tracking-wider leading-tight">Recruiter</span>
                                     </div>
                                 </button>
@@ -101,10 +108,8 @@ export default function Navbar() {
                                     <div className="absolute right-0 mt-2 w-48 bg-neutral-900 border border-white/10 rounded-xl shadow-2xl py-2 z-50">
                                         <button
                                             onClick={() => {
-                                                localStorage.removeItem("recruiter_token");
-                                                localStorage.removeItem("recruiter_username");
+                                                signOut();
                                                 setIsDropdownOpen(false);
-                                                window.location.reload();
                                             }}
                                             className="w-full text-left px-4 py-2 text-sm text-red-400 hover:bg-white/5 transition font-medium"
                                         >
@@ -117,7 +122,7 @@ export default function Navbar() {
                     )}
 
                     {/* ONLY CANDIDATE SIGNED IN */}
-                    {!localStorage.getItem("recruiter_username") && (
+                    {isCandidate && (
                         <SignedIn>
                             <div className="flex items-center gap-4">
                                 <Link to="/dashboard" className="px-6 py-2 bg-primary hover:bg-white transition text-black text-sm font-medium rounded-md active:scale-95">
@@ -150,7 +155,7 @@ export default function Navbar() {
                 ))}
 
                 {/* NO ONE SIGNED IN */}
-                {!localStorage.getItem("recruiter_username") && (
+                {!isRecruiter && (
                     <SignedOut>
                         <div className="flex flex-col items-center gap-4 mt-4 bg-white/5 rounded-2xl w-3/4 py-6 border border-white/10 shadow-xl">
                             <span className="text-xs text-neutral-500 uppercase tracking-widest font-bold">Go to Dashboard</span>
@@ -167,25 +172,23 @@ export default function Navbar() {
                 )}
 
                 {/* RECRUITER SIGNED IN */}
-                {localStorage.getItem("recruiter_username") && (
+                {isRecruiter && (
                     <>
                         <Link to="/recruiter/dashboard" onClick={() => setIsMenuOpen(false)} className="px-6 py-2 bg-primary text-black rounded-md font-bold">Dashboard</Link>
                         
                         <div className="flex flex-col items-center gap-4 mt-4">
                             <div className="flex items-center gap-2 px-4 py-2 bg-neutral-900 rounded-full border border-white/20">
                                 <div className="size-8 rounded-full bg-primary text-black flex items-center justify-center text-sm font-bold shadow-[0_0_10px_rgba(255,255,255,0.4)]">
-                                    {localStorage.getItem("recruiter_username")[0].toUpperCase()}
+                                    {recruiterEmail[0]?.toUpperCase()}
                                 </div>
                                 <div className="flex flex-col pr-2 text-left">
-                                    <span className="text-white font-medium leading-tight">{localStorage.getItem("recruiter_username")}</span>
+                                    <span className="text-white font-medium leading-tight max-w-[150px] truncate">{recruiterEmail}</span>
                                     <span className="text-[10px] text-neutral-400 uppercase tracking-wider leading-tight">Recruiter</span>
                                 </div>
                             </div>
                             <button
                                 onClick={() => {
-                                    localStorage.removeItem("recruiter_token");
-                                    localStorage.removeItem("recruiter_username");
-                                    window.location.reload();
+                                    signOut();
                                 }}
                                 className="text-red-400 text-sm font-medium hover:underline px-4 py-2"
                             >
@@ -196,7 +199,7 @@ export default function Navbar() {
                 )}
 
                 {/* CANDIDATE SIGNED IN */}
-                {!localStorage.getItem("recruiter_username") && (
+                {isCandidate && (
                     <SignedIn>
                         <Link to="/dashboard" onClick={() => setIsMenuOpen(false)} className="px-6 py-2 bg-primary text-black rounded-md font-bold">Dashboard</Link>
                         
