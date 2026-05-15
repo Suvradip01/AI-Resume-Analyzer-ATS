@@ -31,3 +31,16 @@ tmp_test/
 runs/
 wandb/
 lightning_logs/
+
+# Local dev backend — identical copy of insightats-backend/ (the real deployed HF Space repo)
+# Kept locally for dev/testing only. Not tracked here to avoid code drift confusion.
+backend/
+
+# Separate HuggingFace git repos — have their own .git, deployed independently
+# insightats-backend/ → https://huggingface.co/spaces/Suvradip01/insightats-backend
+# insightats-models/  → https://huggingface.co/Suvradip01/insightats-models
+insightats-backend/
+insightats-models/
+
+# Scratch / training artefacts at root
+Readmemodel.txt
