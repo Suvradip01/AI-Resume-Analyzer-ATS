@@ -32,8 +32,8 @@ export default function Navbar() {
                 viewport={{ once: true }}
                 transition={{ type: "spring", stiffness: 250, damping: 70, mass: 1 }}
             >
-                <Link to="/" className="flex items-center gap-2 hover:opacity-80 transition cursor-pointer">
-                    <span className="font-bold text-lg tracking-tight text-white">InSightATS</span>
+                <Link to="/" className="flex items-center hover:opacity-80 transition cursor-pointer pl-2">
+                    <img src="/logo.png" alt="InSightATS Logo" className="h-12 sm:h-14 w-auto object-contain scale-[2] sm:scale-[2.5] origin-left" />
                 </Link>
 
                 <div className="hidden lg:flex items-center gap-8 transition duration-500">

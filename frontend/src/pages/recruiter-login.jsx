@@ -130,8 +130,8 @@ export default function RecruiterLoginPage() {
                     <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full h-full bg-[radial-gradient(circle_at_center,rgba(255,255,255,0.03)_0%,transparent_70%)]" />
                 </div>
 
-                <div className="relative z-10 flex items-center gap-3">
-                    <span className="font-bold text-2xl tracking-tight">InSightATS</span>
+                <div className="relative z-10 flex items-center pl-4">
+                    <img src="/logo.png" alt="InSightATS Logo" className="h-16 lg:h-20 w-auto object-contain scale-[2] lg:scale-[2.5] origin-left" />
                 </div>
 
                 <div className="relative z-10 max-w-lg mb-20">
@@ -161,9 +161,8 @@ export default function RecruiterLoginPage() {
                 style={{ willChange: "transform" }}
                 className="w-full lg:w-1/2 absolute lg:relative inset-0 flex flex-col justify-center p-8 sm:p-12 bg-[#050505] z-10"
             >
-                {/* Mobile Header */}
-                <div className="absolute top-8 left-8 lg:hidden flex items-center gap-2">
-                    <span className="font-bold text-xl tracking-tight">InSightATS</span>
+                <div className="absolute top-8 left-8 lg:hidden flex items-center pl-2">
+                    <img src="/logo.png" alt="InSightATS Logo" className="h-10 sm:h-12 w-auto object-contain scale-[2] sm:scale-[2.5] origin-left" />
                 </div>
 
                 <div className="w-full max-w-[360px] mx-auto">

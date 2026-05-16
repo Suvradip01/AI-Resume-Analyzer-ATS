@@ -178,8 +178,8 @@ export default function Dashboard() {
             <header className="fixed top-6 inset-x-0 z-50 flex justify-center px-6">
                 <div className="bg-black/40 backdrop-blur-md border border-white/10 rounded-full px-6 py-3 flex items-center justify-between shadow-2xl w-full max-w-6xl">
 
-                    <a href="/" className="flex items-center gap-2 hover:opacity-80 transition cursor-pointer">
-                        <span className="font-bold text-lg tracking-tight text-white">InSightATS</span>
+                    <a href="/" className="flex items-center hover:opacity-80 transition cursor-pointer pl-2">
+                        <img src="/logo.png" alt="InSightATS Logo" className="h-10 md:h-12 w-auto object-contain scale-[2] md:scale-[2.5] origin-left" />
                     </a>
 
                     <div className="flex items-center gap-6">
