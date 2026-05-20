@@ -50,5 +50,15 @@ class Settings:
         ],
     )
 
+    # Clerk — required for POST /api/v1/recruiter/batch-analyze (frontend getToken() JWTs)
+    # Issuer URL from Clerk Dashboard → API Keys → Advanced → JWT issuer
+    CLERK_ISSUER: str = os.environ.get("CLERK_ISSUER", "").rstrip("/")
+    CLERK_JWKS_URL: str = os.environ.get(
+        "CLERK_JWKS_URL",
+        f"{CLERK_ISSUER}/.well-known/jwks.json" if CLERK_ISSUER else "",
+    )
+    # Optional: Clerk "Authorized parties" / azp — leave empty for default session tokens
+    CLERK_AUDIENCE: str = os.environ.get("CLERK_AUDIENCE", "").strip()
+
 
 settings = Settings()

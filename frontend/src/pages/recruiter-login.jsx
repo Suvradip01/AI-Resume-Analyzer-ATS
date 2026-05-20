@@ -1,13 +1,14 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Building2, Mail, Lock, CheckCircle2, KeyRound } from "lucide-react";
-import { useSignIn, useSignUp } from "@clerk/clerk-react";
+import { useSignIn, useSignUp, useUser } from "@clerk/clerk-react";
 import { motion, AnimatePresence } from "framer-motion";
 
 export default function RecruiterLoginPage() {
     const nav = useNavigate();
     const { isLoaded: isSignInLoaded, signIn, setActive: setSignInActive } = useSignIn();
     const { isLoaded: isSignUpLoaded, signUp, setActive: setSignUpActive } = useSignUp();
+    const { isLoaded: isUserLoaded, isSignedIn } = useUser();
     
     const [mode, setMode] = useState("login"); // "login", "register", "verify_signup", "forgot_password", "reset_password"
     const [company, setCompany] = useState("");
@@ -16,6 +17,20 @@ export default function RecruiterLoginPage() {
     const [code, setCode] = useState("");
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState("");
+
+    useEffect(() => {
+        if (isUserLoaded && isSignedIn) {
+            nav("/recruiter/dashboard");
+        }
+    }, [isUserLoaded, isSignedIn, nav]);
+
+    if (!isUserLoaded) {
+        return (
+            <div className="min-h-screen bg-black flex items-center justify-center">
+                <div className="size-8 border-4 border-white/20 border-t-white rounded-full animate-spin"></div>
+            </div>
+        );
+    }
 
     async function submit(e) {
         if (e) e.preventDefault();
