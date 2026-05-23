@@ -59,20 +59,7 @@ export default function HeroSection() {
             >
                 Transparent 4D scoring and explainable reasoning to help you stand out.
             </motion.p>
-            <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ duration: 1, delay: 0.4 }}
-                className="flex items-center justify-center gap-3 text-[10px] font-bold uppercase tracking-[0.2em] text-white/30 mb-10"
-            >
-                <span>BERT</span>
-                <span className="size-1 rounded-full bg-white/20" />
-                <span>RoBERTa</span>
-                <span className="size-1 rounded-full bg-white/20" />
-                <span>DistilBERT</span>
-                <span className="size-1 rounded-full bg-white/20" />
-                <span>SHAP</span>
-            </motion.div>
+
             <MotionDiv className="flex flex-col sm:flex-row items-center gap-4 mt-8"
                 initial={{ y: 50, opacity: 0 }}
                 whileInView={{ y: 0, opacity: 1 }}

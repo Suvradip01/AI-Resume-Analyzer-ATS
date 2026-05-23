@@ -336,7 +336,6 @@ All Vite env vars must be prefixed with **`VITE_`** to expose to client.
 - Badge: “AI Powered Resume Analysis”.
 - Headline with `<FlipWords words={["Dream job", "Next Step", "True Path"]} />`.
 - Subcopy: “Transparent 4D scoring…”
-- Tech strip: BERT · RoBERTa · DistilBERT · SHAP (matches backend story).
 - CTAs: `<a href="/dashboard">` (candidate), `<a href="/recruiter">` (recruiter).
 - `<TiltedImage />` — dashboard screenshot.
 
