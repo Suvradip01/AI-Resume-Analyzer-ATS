@@ -47,6 +47,7 @@ def verify_clerk_jwt(token: str) -> dict:
             "algorithms": ["RS256"],
             "issuer": settings.CLERK_ISSUER,
             "options": decode_options,
+            "leeway": 60,
         }
         if settings.CLERK_AUDIENCE:
             kwargs["audience"] = settings.CLERK_AUDIENCE
