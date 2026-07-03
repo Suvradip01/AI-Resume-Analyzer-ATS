@@ -11,11 +11,27 @@ const API_BATCH = `${import.meta.env.VITE_API_BASE ?? "http://127.0.0.1:8000"}/a
 // ── Async thunk ──────────────────────────────────────────────────────────────
 
 /**
- * Dispatch with `{ files: File[], jdFile: File, token: string, companyName: string }`.
+ * Dispatch with `{ files: File[], jdFile: File, getToken: Function, companyName: string }`.
+ *
+ * `getToken` is Clerk's `useAuth().getToken` — we call it with `{ skipCache: true }`
+ * right before the HTTP request so we always send a fresh, non-expired JWT even
+ * when uploading many large files takes a while.
  */
 export const runBatchAnalysis = createAsyncThunk(
     "recruiter/batchAnalyze",
-    async ({ files, jdFile, token, companyName }, { rejectWithValue }) => {
+    async ({ files, jdFile, getToken, companyName }, { rejectWithValue }) => {
+        // Fetch a brand-new token right before sending — avoids "Signature has expired"
+        // errors that occur when the token was obtained before a slow multi-file upload.
+        let freshToken;
+        try {
+            freshToken = await getToken({ skipCache: true });
+        } catch (err) {
+            return rejectWithValue("Session expired. Please sign in again.");
+        }
+        if (!freshToken) {
+            return rejectWithValue("Session expired. Please sign in again.");
+        }
+
         const form = new FormData();
         files.forEach((f) => form.append("resumes", f));
         form.append("job_description_file", jdFile);
@@ -23,7 +39,7 @@ export const runBatchAnalysis = createAsyncThunk(
         const res = await fetch(API_BATCH, {
             method: "POST",
             headers: {
-                Authorization: `Bearer ${token}`,
+                Authorization: `Bearer ${freshToken}`,
                 "X-Company-Name": companyName,
             },
             body: form,

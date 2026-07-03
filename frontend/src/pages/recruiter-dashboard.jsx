@@ -103,18 +103,10 @@ export default function RecruiterDashboardPage() {
 
     async function analyze() {
         if (!files.length || !jdFile) return;
-
-        let token;
-        try {
-            token = await getToken();
-        } catch {
-            nav("/recruiter");
-            return;
-        }
-        if (!token) { nav("/recruiter"); return; }
-
         const companyName = user?.unsafeMetadata?.company || "your company";
-        dispatch(runBatchAnalysis({ files, jdFile, token, companyName }));
+        // Pass getToken directly so the thunk fetches a fresh token right before
+        // the HTTP request — prevents "Signature has expired" on large batch uploads.
+        dispatch(runBatchAnalysis({ files, jdFile, getToken, companyName }));
     }
 
     return (
