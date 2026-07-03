@@ -1,5 +1,9 @@
 import os
 import uvicorn
+from dotenv import load_dotenv
+
+# Load local environment variables from .env
+load_dotenv()
 
 if __name__ == "__main__":
     port    = int(os.environ.get("PORT", 8000))           # 8000 = standard for FastAPI

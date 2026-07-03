@@ -1,14 +1,30 @@
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Upload, FileText, LogOut, Home, Trophy, Award, Medal, CheckCircle2, AlertTriangle, Info, ChevronRight } from "lucide-react";
+import { useDispatch, useSelector } from "react-redux";
+import {
+    Upload, FileText, LogOut, Home, Trophy,
+    Award, Medal, CheckCircle2, AlertTriangle, Info, ChevronRight,
+} from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useAuth, useUser, useClerk } from "@clerk/clerk-react";
+
 import { Badge } from "../components/ui/badge";
 import { Progress } from "../components/ui/progress";
 
-const API_BATCH = `${import.meta.env.VITE_API_BASE}/api/v1/recruiter/batch-analyze`;
+import {
+    setFiles,
+    setJdFile,
+    runBatchAnalysis,
+    selectRecruiterFiles,
+    selectJdFile,
+    selectRecruiterLoading,
+    selectRecruiterData,
+    selectRecruiterError,
+} from "../store/recruiterSlice";
 
 const MotionDiv = motion.div;
+
+// ── Pure helpers ─────────────────────────────────────────────────────────────
 
 const getRankIcon = (rank) => {
     switch (rank) {
@@ -33,12 +49,12 @@ const cleanFeedbackText = (text) => {
     let cleaned = text.replace(/[\uFFFD\u203D◆♦]/g, "");
     const levelMatch = cleaned.match(/\((Basic|Medium|Advanced)\s*Level\)/i);
     if (levelMatch) {
-        cleaned = cleaned.replace(/^.*?(\((Basic|Medium|Advanced)\s*Level\)).*?:\s*/i, '$1. ');
+        cleaned = cleaned.replace(/^.*?(\((Basic|Medium|Advanced)\s*Level\)).*?:\s*/i, "$1. ");
     } else {
         const labelPattern = /^[\s\W]*(\*\*)?(Skills|Experience Relevance|Experience|Project Detected|Project|Overall|Tip for [^:]+|Final Verdict)(\*\*)?:\s*/i;
-        cleaned = cleaned.replace(labelPattern, '');
+        cleaned = cleaned.replace(labelPattern, "");
     }
-    cleaned = cleaned.replace(/^[^a-zA-Z0-9*("'`[\]]+/g, "");
+    cleaned = cleaned.replace(/^[^a-zA-Z0-9*(\"'`[\]]+/g, "");
     cleaned = cleaned.replace(/\*\*(.*?)\*\*/g, '<strong class="text-white">$1</strong>');
     return cleaned.trim();
 };
@@ -49,21 +65,35 @@ const getFeedbackIcon = (text) => {
     return <Info className="size-3.5 text-blue-400 shrink-0 mt-0.5" />;
 };
 
+const containerVariants = {
+    hidden: { opacity: 0 },
+    show: { opacity: 1, transition: { staggerChildren: 0.1 } },
+};
+
+const itemVariants = {
+    hidden: { opacity: 0, y: 20 },
+    show: { opacity: 1, y: 0, transition: { type: "spring", stiffness: 300, damping: 24 } },
+};
+
+// ── Component ─────────────────────────────────────────────────────────────────
+
 export default function RecruiterDashboardPage() {
-    const nav = useNavigate();
+    const nav      = useNavigate();
+    const dispatch = useDispatch();
+
     const { isLoaded, isSignedIn, getToken } = useAuth();
-    const { user } = useUser();
+    const { user }  = useUser();
     const { signOut } = useClerk();
-    const [files, setFiles] = useState([]);
-    const [jdFile, setJdFile] = useState(null);
-    const [loading, setLoading] = useState(false);
-    const [error, setError] = useState("");
-    const [data, setData] = useState(null);
+
+    // Redux state
+    const files   = useSelector(selectRecruiterFiles);
+    const jdFile  = useSelector(selectJdFile);
+    const loading = useSelector(selectRecruiterLoading);
+    const data    = useSelector(selectRecruiterData);
+    const error   = useSelector(selectRecruiterError);
 
     useEffect(() => {
-        if (isLoaded && !isSignedIn) {
-            nav("/recruiter");
-        }
+        if (isLoaded && !isSignedIn) nav("/recruiter");
     }, [isLoaded, isSignedIn, nav]);
 
     async function logout() {
@@ -72,103 +102,48 @@ export default function RecruiterDashboardPage() {
     }
 
     async function analyze() {
-        if (!files.length || !jdFile) {
-            setError("Upload at least 1 resume and a job description file.");
-            return;
-        }
-        
+        if (!files.length || !jdFile) return;
+
         let token;
         try {
             token = await getToken();
-        } catch (e) {
+        } catch {
             nav("/recruiter");
             return;
         }
+        if (!token) { nav("/recruiter"); return; }
 
-        if (!token) {
-            nav("/recruiter");
-            return;
-        }
-
-        setError("");
-        setLoading(true);
-        setData(null);
-        try {
-            const form = new FormData();
-            files.forEach((f) => form.append("resumes", f));
-            form.append("job_description_file", jdFile);
-            
-            // Pass the company name in the headers so the backend knows it
-            const companyName = user?.unsafeMetadata?.company || "your company";
-
-            const res = await fetch(API_BATCH, {
-                method: "POST",
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                    "X-Company-Name": companyName
-                },
-                body: form,
-            });
-            const out = await res.json().catch(() => ({}));
-            if (!res.ok) throw new Error(out.detail || "Batch analyze failed");
-            setData(out);
-        } catch (e) {
-            setError(e.message || "Something went wrong");
-        } finally {
-            setLoading(false);
-        }
+        const companyName = user?.unsafeMetadata?.company || "your company";
+        dispatch(runBatchAnalysis({ files, jdFile, token, companyName }));
     }
-
-    const containerVariants = {
-        hidden: { opacity: 0 },
-        show: { opacity: 1, transition: { staggerChildren: 0.1 } }
-    };
-
-    const itemVariants = {
-        hidden: { opacity: 0, y: 20 },
-        show: { opacity: 1, y: 0, transition: { type: "spring", stiffness: 300, damping: 24 } }
-    };
 
     return (
         <div className="min-h-screen bg-background text-foreground font-sans selection:bg-primary/30 overflow-x-hidden">
-            {/* Background Gradients & Grid */}
+            {/* Background */}
             <div className="fixed inset-0 z-0 pointer-events-none bg-black">
                 <div className="absolute inset-0 bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-[size:24px_24px]" />
                 <div className="absolute left-0 right-0 top-0 -z-10 m-auto h-[310px] w-[310px] rounded-full bg-white opacity-20 blur-[100px]" />
             </div>
 
-            {/* Header / Floating Navbar */}
+            {/* Navbar */}
             <header className="fixed top-6 inset-x-0 z-50 flex justify-center px-6">
                 <div className="bg-black/40 backdrop-blur-md border border-white/10 rounded-full px-6 py-3 flex items-center justify-between shadow-2xl w-full max-w-6xl">
                     <a href="/" className="flex items-center hover:opacity-80 transition cursor-pointer pl-2">
                         <img src="/logo.png" alt="InSightATS Logo" className="h-10 md:h-12 w-auto object-contain scale-[2] md:scale-[2.5] origin-left" />
                     </a>
-
                     <div className="flex items-center gap-3">
-                        <button
-                            onClick={() => nav("/")}
-                            className="hidden sm:flex items-center gap-2 px-4 h-10 rounded-full bg-white/5 border border-white/10 hover:bg-white/10 transition"
-                        >
-                            <Home className="size-4" />
-                            Home
+                        <button onClick={() => nav("/")} className="hidden sm:flex items-center gap-2 px-4 h-10 rounded-full bg-white/5 border border-white/10 hover:bg-white/10 transition">
+                            <Home className="size-4" /> Home
                         </button>
-                        <button
-                            onClick={logout}
-                            className="flex items-center gap-2 px-4 h-10 rounded-full bg-white text-black hover:opacity-90 transition"
-                        >
-                            <LogOut className="size-4" />
-                            Logout
+                        <button onClick={logout} className="flex items-center gap-2 px-4 h-10 rounded-full bg-white text-black hover:opacity-90 transition">
+                            <LogOut className="size-4" /> Logout
                         </button>
                     </div>
                 </div>
             </header>
 
             <main className="relative z-10 w-full max-w-7xl mx-auto px-6 pt-28 pb-10">
-                <MotionDiv
-                    initial={{ opacity: 0, y: -10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    className="mb-8"
-                >
+                <MotionDiv initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="mb-8">
                     <h1 className="text-3xl md:text-5xl font-bold mb-2 bg-gradient-to-b from-white to-neutral-400 bg-clip-text text-transparent">
                         Recruiter Shortlist
                     </h1>
@@ -177,22 +152,18 @@ export default function RecruiterDashboardPage() {
                     </p>
                 </MotionDiv>
 
-                <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+                <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:h-[750px]">
                     {/* Left Panel: Inputs */}
-                    <MotionDiv
-                        initial={{ opacity: 0, x: -20 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        className="lg:col-span-4 flex flex-col gap-6"
-                    >
-                        <div className="group relative overflow-hidden rounded-3xl border border-white/10 bg-neutral-900/50 p-6 hover:bg-neutral-900/80 transition duration-500">
+                    <MotionDiv initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} className="lg:col-span-4 h-full">
+                        <div className="group relative overflow-hidden rounded-3xl border border-white/10 bg-neutral-900/50 p-6 hover:bg-neutral-900/80 transition duration-500 h-full">
                             <div className="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent opacity-0 group-hover:opacity-100 transition duration-500" />
 
-                            <div className="relative z-10 space-y-6">
+                            <div className="relative z-10 space-y-6 h-full flex flex-col justify-between">
+                                {/* Resume Upload */}
                                 <div>
                                     <div className="flex items-center justify-between mb-3">
                                         <div className="text-xs font-bold text-white uppercase tracking-wider flex items-center gap-2">
-                                            <Upload className="size-4 text-blue-400" />
-                                            Candidates
+                                            <Upload className="size-4 text-blue-400" /> Candidates
                                         </div>
                                         <Badge variant="outline" className="text-[10px] uppercase tracking-widest bg-black/40">
                                             {files.length} selected
@@ -207,7 +178,7 @@ export default function RecruiterDashboardPage() {
                                             type="file"
                                             multiple
                                             className="hidden"
-                                            onChange={(e) => setFiles(Array.from(e.target.files || []))}
+                                            onChange={(e) => dispatch(setFiles(Array.from(e.target.files || [])))}
                                         />
                                     </label>
                                     {files.length > 0 && (
@@ -222,11 +193,11 @@ export default function RecruiterDashboardPage() {
                                     )}
                                 </div>
 
+                                {/* JD Upload */}
                                 <div>
                                     <div className="flex items-center justify-between mb-3">
                                         <div className="text-xs font-bold text-white uppercase tracking-wider flex items-center gap-2">
-                                            <FileText className="size-4 text-purple-400" />
-                                            Job Description
+                                            <FileText className="size-4 text-purple-400" /> Job Description
                                         </div>
                                         {jdFile && <Badge variant="success" className="text-[10px] uppercase">Ready</Badge>}
                                     </div>
@@ -239,7 +210,7 @@ export default function RecruiterDashboardPage() {
                                             type="file"
                                             accept=".txt,.pdf,.docx"
                                             className="hidden"
-                                            onChange={(e) => setJdFile(e.target.files?.[0] || null)}
+                                            onChange={(e) => dispatch(setJdFile(e.target.files?.[0] || null))}
                                         />
                                     </label>
                                     {jdFile && (
@@ -252,29 +223,26 @@ export default function RecruiterDashboardPage() {
                                     )}
                                 </div>
 
+                                {/* Error */}
                                 <AnimatePresence>
                                     {error && (
-                                        <MotionDiv
-                                            initial={{ opacity: 0, height: 0 }}
-                                            animate={{ opacity: 1, height: 'auto' }}
-                                            exit={{ opacity: 0, height: 0 }}
-                                            className="overflow-hidden"
-                                        >
+                                        <MotionDiv initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} exit={{ opacity: 0, height: 0 }} className="overflow-hidden">
                                             <div className="bg-red-500/10 border border-red-500/20 text-red-200 px-4 py-3 rounded-xl text-sm flex items-center gap-2">
-                                                <AlertTriangle className="size-4 shrink-0" />
-                                                {error}
+                                                <AlertTriangle className="size-4 shrink-0" /> {error}
                                             </div>
                                         </MotionDiv>
                                     )}
                                 </AnimatePresence>
 
+                                {/* CTA */}
                                 <button
-                                    disabled={loading}
+                                    disabled={loading || !files.length || !jdFile}
                                     onClick={analyze}
-                                    className={`w-full h-14 rounded-full font-bold text-base shadow-lg flex items-center justify-center gap-2 transition-all duration-300 ${loading
+                                    className={`w-full h-14 rounded-full font-bold text-base shadow-lg flex items-center justify-center gap-2 transition-all duration-300 ${
+                                        loading || !files.length || !jdFile
                                             ? "bg-neutral-800 text-neutral-500 cursor-not-allowed border border-white/5"
                                             : "bg-white text-black hover:scale-[1.02] shadow-[0_0_30px_-5px_rgba(255,255,255,0.3)]"
-                                        }`}
+                                    }`}
                                 >
                                     {loading ? (
                                         <div className="flex items-center gap-2">
@@ -292,18 +260,17 @@ export default function RecruiterDashboardPage() {
                         </div>
                     </MotionDiv>
 
-                    {/* Right Panel: Ranked Results */}
+                    {/* Right Panel: Results */}
                     <MotionDiv
                         initial={{ opacity: 0, x: 20 }}
                         animate={{ opacity: 1, x: 0 }}
-                        className="lg:col-span-8 group relative overflow-hidden rounded-3xl border border-white/10 bg-neutral-900/40 p-6 backdrop-blur-sm"
+                        className="lg:col-span-8 group relative overflow-hidden rounded-3xl border border-white/10 bg-neutral-900/40 p-6 backdrop-blur-sm h-full"
                     >
                         <div className="absolute inset-0 bg-gradient-to-bl from-white/5 to-transparent opacity-0 group-hover:opacity-100 transition duration-500" />
                         <div className="relative z-10 h-full flex flex-col">
                             <div className="flex items-center justify-between mb-6 pb-4 border-b border-white/5">
                                 <div className="text-sm font-bold text-white uppercase tracking-wider flex items-center gap-2">
-                                    <Trophy className="size-5 text-yellow-500" />
-                                    Ranking
+                                    <Trophy className="size-5 text-yellow-500" /> Ranking
                                 </div>
                                 <div className="text-xs text-neutral-400 uppercase tracking-widest font-semibold bg-black/30 px-3 py-1 rounded-full border border-white/5">
                                     {data?.total ? `${data.total} Scored` : "Awaiting Input"}
@@ -330,8 +297,7 @@ export default function RecruiterDashboardPage() {
                                     variants={containerVariants}
                                     initial="hidden"
                                     animate="show"
-                                    className="flex-1 overflow-y-auto pr-2 custom-scrollbar space-y-4 pb-4"
-                                    style={{ maxHeight: 'calc(100vh - 300px)' }}
+                                    className="flex-1 min-h-0 overflow-y-auto pr-2 custom-scrollbar space-y-4 pb-4"
                                 >
                                     {data.results.map((r) => {
                                         const an = r.analysis;
@@ -342,7 +308,6 @@ export default function RecruiterDashboardPage() {
                                                 className={`rounded-2xl border p-5 backdrop-blur-md transition-all duration-300 hover:scale-[1.01] ${getRankStyle(r.rank)}`}
                                             >
                                                 <div className="flex flex-col md:flex-row md:items-start justify-between gap-5">
-                                                    {/* Candidate Info & Score Breakdown */}
                                                     <div className="flex-1 min-w-0">
                                                         <div className="flex items-center gap-3 mb-2">
                                                             <div className="flex items-center justify-center size-10 rounded-full bg-black/40 border border-white/10 shadow-inner">
@@ -365,48 +330,25 @@ export default function RecruiterDashboardPage() {
                                                             </div>
                                                         </div>
 
-                                                        {/* Sub-scores visual breakdown */}
                                                         {an && (
                                                             <div className="grid grid-cols-5 gap-2 mt-4 max-w-xl">
-                                                                <div className="space-y-1.5">
-                                                                    <div className="flex justify-between text-[10px] font-medium text-neutral-400 uppercase">
-                                                                        <span>AI Fit</span>
-                                                                        <span className="text-white">{Math.round((an.fit_result?.fit_score || 0) * 100)}</span>
+                                                                {[
+                                                                    { label: "AI Fit",  value: Math.round((an.fit_result?.fit_score || 0) * 100), color: "bg-pink-500" },
+                                                                    { label: "Skills",  value: an.skill_score,      color: "bg-blue-500" },
+                                                                    { label: "Exp",     value: an.experience_score, color: "bg-purple-500" },
+                                                                    { label: "Proj",    value: an.project_score,    color: "bg-emerald-500" },
+                                                                    { label: "Struct",  value: an.structure_score,  color: "bg-amber-500" },
+                                                                ].map(({ label, value, color }) => (
+                                                                    <div key={label} className="space-y-1.5">
+                                                                        <div className="flex justify-between text-[10px] font-medium text-neutral-400 uppercase">
+                                                                            <span>{label}</span><span className="text-white">{value}</span>
+                                                                        </div>
+                                                                        <Progress value={value} className="h-1 bg-white/10" indicatorClassName={color} />
                                                                     </div>
-                                                                    <Progress value={Math.round((an.fit_result?.fit_score || 0) * 100)} className="h-1 bg-white/10" indicatorClassName="bg-pink-500" />
-                                                                </div>
-                                                                <div className="space-y-1.5">
-                                                                    <div className="flex justify-between text-[10px] font-medium text-neutral-400 uppercase">
-                                                                        <span>Skills</span>
-                                                                        <span className="text-white">{an.skill_score}</span>
-                                                                    </div>
-                                                                    <Progress value={an.skill_score} className="h-1 bg-white/10" indicatorClassName="bg-blue-500" />
-                                                                </div>
-                                                                <div className="space-y-1.5">
-                                                                    <div className="flex justify-between text-[10px] font-medium text-neutral-400 uppercase">
-                                                                        <span>Exp</span>
-                                                                        <span className="text-white">{an.experience_score}</span>
-                                                                    </div>
-                                                                    <Progress value={an.experience_score} className="h-1 bg-white/10" indicatorClassName="bg-purple-500" />
-                                                                </div>
-                                                                <div className="space-y-1.5">
-                                                                    <div className="flex justify-between text-[10px] font-medium text-neutral-400 uppercase">
-                                                                        <span>Proj</span>
-                                                                        <span className="text-white">{an.project_score}</span>
-                                                                    </div>
-                                                                    <Progress value={an.project_score} className="h-1 bg-white/10" indicatorClassName="bg-emerald-500" />
-                                                                </div>
-                                                                <div className="space-y-1.5">
-                                                                    <div className="flex justify-between text-[10px] font-medium text-neutral-400 uppercase">
-                                                                        <span>Struct</span>
-                                                                        <span className="text-white">{an.structure_score}</span>
-                                                                    </div>
-                                                                    <Progress value={an.structure_score} className="h-1 bg-white/10" indicatorClassName="bg-amber-500" />
-                                                                </div>
+                                                                ))}
                                                             </div>
                                                         )}
 
-                                                        {/* AI Feedback Snippets */}
                                                         {an?.feedback?.length > 0 && (
                                                             <div className="mt-5 space-y-2 bg-black/20 p-3.5 rounded-xl border border-white/5">
                                                                 <h4 className="text-[10px] font-bold text-neutral-500 uppercase tracking-wider mb-2">Key Insights</h4>
@@ -420,32 +362,24 @@ export default function RecruiterDashboardPage() {
                                                         )}
                                                     </div>
 
-                                                    {/* Headline Score Donut / Number */}
+                                                    {/* Score Donut */}
                                                     <div className="shrink-0 flex flex-col items-center justify-center p-4 bg-black/40 rounded-2xl border border-white/10 min-w-[100px] shadow-inner">
                                                         <div className="relative flex items-center justify-center w-16 h-16 mb-1">
-                                                            {/* SVG Donut Chart */}
                                                             <svg className="w-full h-full transform -rotate-90" viewBox="0 0 36 36">
-                                                                <path
-                                                                    className="text-white/10"
-                                                                    strokeWidth="3"
-                                                                    stroke="currentColor"
-                                                                    fill="none"
-                                                                    d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
-                                                                />
+                                                                <path className="text-white/10" strokeWidth="3" stroke="currentColor" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
                                                                 <motion.path
                                                                     initial={{ strokeDasharray: "0, 100" }}
                                                                     animate={{ strokeDasharray: `${r.score}, 100` }}
                                                                     transition={{ duration: 1.5, ease: "easeOut" }}
-                                                                    className={`${r.score >= 80 ? 'text-green-500' : r.score >= 60 ? 'text-yellow-500' : 'text-red-500'}`}
+                                                                    className={r.score >= 80 ? "text-green-500" : r.score >= 60 ? "text-yellow-500" : "text-red-500"}
                                                                     strokeWidth="3"
-                                                                    strokeDasharray={`${r.score}, 100`}
                                                                     strokeLinecap="round"
                                                                     stroke="currentColor"
                                                                     fill="none"
                                                                     d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
                                                                 />
                                                             </svg>
-                                                            <div className="absolute inset-0 flex items-center justify-center flex-col">
+                                                            <div className="absolute inset-0 flex items-center justify-center">
                                                                 <span className="text-xl font-black text-white">{r.score}</span>
                                                             </div>
                                                         </div>

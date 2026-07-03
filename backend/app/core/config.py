@@ -60,5 +60,11 @@ class Settings:
     # Optional: Clerk "Authorized parties" / azp — leave empty for default session tokens
     CLERK_AUDIENCE: str = os.environ.get("CLERK_AUDIENCE", "").strip()
 
+    # Redis caching — set REDIS_URL to enable result caching (e.g. redis://localhost:6379/0)
+    # Leave empty to disable Redis and run without caching (graceful degradation).
+    REDIS_URL: str = os.environ.get("REDIS_URL", "").strip()
+    # How long to keep a cached analysis result (seconds). Default: 1 hour.
+    CACHE_TTL: int = int(os.environ.get("CACHE_TTL", "3600"))
+
 
 settings = Settings()

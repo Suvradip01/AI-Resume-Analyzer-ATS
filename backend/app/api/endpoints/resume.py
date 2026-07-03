@@ -18,7 +18,10 @@ async def analyze_resume(
     """
     InSightATS analyze — multipart FormData:
     - `resume_file`: PDF, DOCX, or TXT
-    - `job_description`: JSON string `{ "title", "description", "mandatory_skills"?, "preferred_skills"? }`
+    - `job_description`: JSON string ``{ "title", "description", "mandatory_skills"?, "preferred_skills"? }``
+
+    Results are cached in Redis (if configured) keyed by sha256(resume + jd)
+    so identical pairs return in <5 ms on subsequent requests.
     """
     try:
         content = await resume_file.read()
@@ -32,10 +35,8 @@ async def analyze_resume(
         except (json.JSONDecodeError, ValueError) as e:
             raise HTTPException(status_code=400, detail=f"Invalid job_description JSON: {e}") from e
 
-        result = get_orchestrator().analyze(text, job)
-
-        if result.status == "pending_setup":
-            return result
+        # Use the cache-aware async entry point.
+        result = await get_orchestrator().analyze_cached(text, job)
 
         return result
 
